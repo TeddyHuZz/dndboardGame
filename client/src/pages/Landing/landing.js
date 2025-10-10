@@ -1,82 +1,156 @@
-import { useState } from "react";
-import "./anding.css";
+"use client";
 
-function Contact() {
-  const [selectedSubject, setSelectedSubject] = useState('generalInquiry'); // Default value
+import { useEffect, useState } from "react"
+import "./Landing.css";
 
-  const handleChange = (event) => {
-    setSelectedSubject(event.target.value);
-  };
+
+const banners = [
+  {
+    id: 1,
+    title: "Forge Your Legend",
+    subtitle: "Roll the Dice, Shape Your Destiny",
+    description: "Embark on legendary quests in a world of magic, monsters, and mystery. Gather your party, vanquish fearsome foes, and write your own saga. Your adventure starts here.",
+    image: "/images/banners/fantasy-dragon.jpg",
+    cta: "Start Your Adventure",
+  },
+  {
+    id: 2,
+    title: "Choose Your Champion",
+    subtitle: "From Mighty Warriors to Arcane Sorcerers",
+    description:
+      "Explore a diverse roster of playable classes and races. Will you be a stoic dwarf warrior, a nimble elven ranger, or a wise human wizard? Each hero offers a unique path to victory.",
+    image: "/images/banners/fantasy-adventurer.jpg",
+    cta: "Discover the Heroes",
+  },
+  {
+    id: 3,
+    title: "Master the Ancient Laws",
+    subtitle: "Learn the Rules, Dominate the Game",
+    description:
+      "From basic combat mechanics to the intricacies of spellcasting, our comprehensive guide has everything you need to become a master tactician. Study the rules to outwit your opponents.",
+    image: "/images/banners/dark-fantasy.jpg",
+    cta: "Explore the Rules",
+  },
+  {
+    id: 4,
+    title: "Join a Guild, Find Your Clan",
+    subtitle: "Adventure is Better with Allies",
+    description:
+      "The journey doesn't end on the game board. Join our thriving community on Discord and social media to share stories, find a party, and connect with fellow adventurers from around the world.",
+    image: "/images/banners/fantasy-wizard.jpg",
+    cta: "Find Your Guild",
+  },
+  {
+    id: 5,
+    title: "Need Aid? Summon Us",
+    subtitle: "Our Scribes Are Here to Help",
+    description:
+      "Have a question, a suggestion, or need to report a rogue bug? Consult our Frequently Asked Questions or send a message directly to our team. We're here to ensure your quest is a smooth one.",
+    image: "/images/banners/fantasy-hero.jpg",
+    cta: "Send a Missive",
+  },
+]
+
+export function Landing() {
+  const [currentBanner, setCurrentBanner] = useState(0)
+  const [scrollProgress, setScrollProgress] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY
+      const windowHeight = window.innerHeight
+      const documentHeight = document.documentElement.scrollHeight - windowHeight
+
+      // Calculate scroll progress (0 to 1)
+      const progress = Math.min(scrollPosition / documentHeight, 1)
+      setScrollProgress(progress)
+
+      // Determine which banner to show based on scroll position
+      const bannerIndex = Math.min(Math.floor(progress * banners.length), banners.length - 1)
+      setCurrentBanner(bannerIndex)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const banner = banners[currentBanner]
 
   return (
-    <div className="Contact">
-      <div className="contactHeader">
-        <h1 className="contactTitle">Get in Touch</h1>
-        <p className="contactDescription">
-          Have questions about funding opportunities or need help with your application? 
-          Our team of experts is here to support your funding journey every step of the way.
-        </p>
-      </div>
-
-      {/* Contact Options */}
-      <div className="contactContainer">
-        <div className="firstContact">
-          <h2>Email Support</h2>
-          <p>Get help with your funding application or general inquiries via email.</p>
-          <span>support@smefundmatch.com</span>
+    <div className="banner-container">
+      {/* Main Banner Section - Fixed */}
+      <section className="banner-section">
+        {/* Background Image with Parallax */}
+        <div className="banner-background-wrapper">
+          {banners.map((b, index) => (
+            <div
+              key={b.id}
+              className="banner-background"
+              style={{
+                opacity: currentBanner === index ? 1 : 0,
+              }}
+            >
+              <img src={b.image || "/placeholder.svg"} alt={b.title} className="banner-image" />
+              <div className="banner-gradient" />
+            </div>
+          ))}
         </div>
-        <div className="secondContact">
-          <h2>Phone Support</h2>
-          <p>Speak with our team directly via phone call for immediate assistance.</p>
-          <span>+6012-345 678</span>
+
+        {/* Content */}
+        <div className="banner-content-wrapper">
+          <div className="banner-content">
+            <div key={`subtitle-${banner.id}`} className="content-subtitle-wrapper">
+              <p className="content-subtitle">{banner.subtitle}</p>
+            </div>
+
+            <div key={`title-${banner.id}`} className="content-title-wrapper">
+              <h2 className="content-title">{banner.title}</h2>
+            </div>
+
+            <div key={`description-${banner.id}`} className="content-description-wrapper">
+              <p className="content-description">
+                {banner.description}
+              </p>
+            </div>
+
+            <div key={`cta-${banner.id}`} className="content-cta-wrapper">
+              <button className="content-cta-button">
+                {banner.cta}
+              </button>
+            </div>
+          </div>
+
+          {/* Scroll Indicator */}
+          {currentBanner === 0 && (
+            <div className="scroll-indicator">
+              <div className="scroll-indicator-content">
+                <span className="scroll-indicator-text">Scroll to explore</span>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="thirdContact">
-          <h2>Live Chat</h2>
-          <p>Chat with our expert support team in real-time.</p>
-          <span>Available 9 AM - 5 PM (GMT+8)</span>
+
+        {/* Progress Indicators */}
+        <div className="progress-indicators">
+          {banners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                const targetScroll =
+                  (index / banners.length) * (document.documentElement.scrollHeight - window.innerHeight)
+                window.scrollTo({ top: targetScroll, behavior: "smooth" })
+              }}
+              className={`progress-dot ${currentBanner === index ? "active" : ""}`}
+              aria-label={`Go to banner ${index + 1}`}
+            />
+          ))}
         </div>
-      </div>
+      </section>
 
-      <div className="additionalInfoContainer">
-        <div className="emailField">
-          <h2>Send Us a Message</h2>
-          <p>We're here to help you with any questions or concerns you may have. Please fill out the form below and we'll get back to you as soon as possible.</p>
-          
-          <div className="formGroup">
-            <label>Full Name *</label>
-            <input type="text" placeholder="John Doe" />
-          </div>
-          
-          <div className="formGroup">
-            <label>Email Address *</label>
-            <input type="email" placeholder="xxx@xxx.com" />
-          </div>
-
-          <div className="formGroup">
-            <label>Company Name *</label>
-            <input type="text" placeholder="John Software House Sdn Bhd" />
-          </div>
-
-          <div className="formGroup">
-            <label htmlFor="subject-select">Subject *</label>
-            <select id="subject-select" value={selectedSubject} onChange={handleChange}>
-              <option value="generalInquiry">General Inquiry</option>
-              <option value="fundingApplication">Funding Application Help</option>
-              <option value="technicalSupport">Technical Support</option>
-              <option value="partnership">Partnership Opportunities</option>
-            </select>
-          </div>
-
-          <div className="formGroup">
-            <label>Message *</label>
-            <textarea placeholder="Please describe your inquiry..." rows="5"></textarea>
-          </div>
-
-          <button className="submitButton">Send Message</button>
-        </div>
-      </div>
+      {/* Spacer to enable scrolling */}
+      <div className="scroll-spacer" style={{ height: `${banners.length * 100}vh` }} />
     </div>
-  );
+  )
 }
 
-export default Contact;
+export default Landing;
