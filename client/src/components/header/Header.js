@@ -10,8 +10,10 @@ const Header = ({ variant = 'full' }) => {
   if (variant === 'minimal') {
     return (
       <header className="header">
-        <div className="header-logo">
-          <Link to="/">Game Logo</Link>
+        <div className="header-content-wrapper">
+          <div className="header-logo">
+            <Link to="/">Game Logo</Link>
+          </div>
         </div>
       </header>
     );

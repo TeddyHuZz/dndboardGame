@@ -1,0 +1,90 @@
+.auth-container {
+    background-color: #090A13;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Inter', sans-serif;
+    color: #ffffff;
+}
+
+.auth-form-container {
+    background-color: #0F101F;
+    padding: 40px;
+    border-radius: 12px;
+    width: 400px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid #2B2C3D;
+}
+
+.form-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    background-color: #23262b;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+.form-toggle button {
+    background: none;
+    border: none;
+    color: #a0a0a0;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 6px;
+    flex: 1;
+}
+
+.form-toggle button.active {
+    background-color: #6c5ce7;
+    color: #ffffff;
+}
+
+.form-toggle button:hover {
+    color: #ffffff;
+}
+
+.auth-form-container h2 {
+    text-align: center;
+    margin-bottom: 8px;
+    font-size: 24px;
+}
+
+.auth-form-container p {
+    text-align: center;
+    color: #a0a0a0;
+    margin-bottom: 24px;
+}
+
+.auth-form-container form input {
+    width: 100%;
+    padding: 12px;
+    background-color: #090A13;
+    border: 1px solid #4a4d52;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 16px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+}
+
+.auth-form-container form button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #f39c12;
+    border: none;
+    border-radius: 6px;
+    color: #1a1d21;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
