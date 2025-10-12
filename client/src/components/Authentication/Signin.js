@@ -1,14 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
 import "./Auth.css";
 
 const Signin = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    });
 
-    const handleLogin = (e) => {
+    useEffect(() => {
+        if (window.location.hash.includes("type=signup")) {
+            alert("Your account has been successfully verified!");
+            window.history.replaceState(null, "", window.location.pathname);
+        }
+    }, []);
+    
+    const handleChange = (e) => {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [e.target.name]: e.target.value,
+        }));
+    };
+
+    const handleLogin = async (e) => {
         e.preventDefault();
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email: formData.email,
+                password: formData.password,
+            });
+
+            if (error) throw error;
+
+            // On successful login, navigate to the main app page
+            navigate("/");
+
+        } catch (error) {
+            alert(error.error_description || error.message);
+        }
     };
 
     return (
@@ -28,17 +59,21 @@ const Signin = () => {
                     <label htmlFor="email" className="input-label">Email</label>
                     <input
                         type="email"
+                        id="email"
+                        name="email"
                         placeholder="youremail@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={formData.email}
+                        onChange={handleChange}
                         required
                     />
                     <label htmlFor="password" className="input-label">Password</label>
                     <input
                         type="password"
+                        id="password"
+                        name="password"
                         placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={formData.password}
+                        onChange={handleChange}
                         required
                     />
                     <button type="submit">Sign In</button>
