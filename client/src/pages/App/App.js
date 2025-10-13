@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from '../../context/AuthContext';
 
 // Layouts
@@ -6,23 +7,37 @@ import MainLayout from '../../layouts/MainLayout';
 import MinimalLayout from '../../layouts/MinimalLayout';
 
 // Pages
-import LandingPage from '../Landing/Landing';
-import Login from '../../components/Authentication/Signin';
+import Landing from '../Landing/Landing';
+import Signin from '../../components/Authentication/Signin';
 import Signup from '../../components/Authentication/Signup';
+
+const LocationHandler = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.message) {
+      alert(location.state.message);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  return null;
+};
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <LocationHandler />
         <Routes>
           {/* --- Routes with the FULL header --- */}
           <Route element={<MainLayout />}>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<Landing />} />
           </Route>
 
           {/* --- Routes with the MINIMAL header --- */}
           <Route element={<MinimalLayout />}>
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Signin />} />
             <Route path="/signup" element={<Signup />} />
           </Route>
         </Routes>

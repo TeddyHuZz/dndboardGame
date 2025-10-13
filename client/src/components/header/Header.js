@@ -1,10 +1,21 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
 
 const Header = ({ variant = 'full' }) => {
-  const { isLoggedIn } = useAuth();
+  const { session, signOut, profile } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/', { state: { message: 'Signed out successfully!' } });
+    } catch (error) {
+      alert(error.message);
+    }
+    navigate('/', { state: { message: 'Signed out successfully!' } });
+  }
 
   // The minimal header
   if (variant === 'minimal') {
@@ -39,12 +50,14 @@ const Header = ({ variant = 'full' }) => {
         </div>
 
         <div className="header-right">
-          {isLoggedIn ? (
-            <div className="user-profile">
-              {/* User Profile Component/Link */}
-              <span>User Profile</span>
-            </div>
-          ) : (
+          {session ? (
+              <div className="user-profile">
+                {/* Corrected ternary operator with a fallback to the email */}
+                <span>Welcome back, {profile ? profile.username : session.user.email}</span>
+                <button onClick={handleSignOut} className="logoutButton">Log Out</button>
+              </div>
+            ) : (
+            // If user is not logged in
             <div className="auth-buttons">
               <Link to="/login" className="signinButton">Log In</Link>
               <Link to="/signup" className="signupButton">Get Started</Link>

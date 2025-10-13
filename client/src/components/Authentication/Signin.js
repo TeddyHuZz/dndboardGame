@@ -35,7 +35,7 @@ const Signin = () => {
             if (error) throw error;
 
             // On successful login, navigate to the main app page
-            navigate("/");
+            navigate("/", { state: { message: "Login successfully!" } });
 
         } catch (error) {
             alert(error.error_description || error.message);
