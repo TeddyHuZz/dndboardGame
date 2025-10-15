@@ -6,50 +6,48 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
-  // Start in a loading state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Check for an active session when the component mounts
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-
-      // 2. If a session exists, fetch the user's profile
-      if (session) {
-        try {
-          const { data, error } = await supabase
-            .from('user')
-            .select('username')
-            .eq('user_id', session.user.id)
-            .single();
-
-          if (error) throw error;
-          if (data) setProfile(data);
-
-        } catch (error) {
-          console.error('Error fetching profile on initial load:', error);
-        }
-      }
-      // 3. Once everything is checked, set loading to false
-      setLoading(false);
-    });
-
-    // 4. Set up a listener for future auth changes (login/logout)
+    // This single listener handles initial session, login, and logout
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
-        // If the user logs out, clear their profile
-        if (!session) {
+
+        if (session) {
+          try {
+            // Fetch profile only when a session exists
+            const { data, error } = await supabase
+              .from('user')
+              .select('username')
+              .eq('user_id', session.user.id)
+              .single();
+
+            if (error) {
+              console.error('Error fetching user profile:', error);
+              setProfile(null);
+            } else if (data) {
+              setProfile(data);
+            }
+          } catch (error) {
+            console.error("An unexpected error occurred while fetching profile:", error);
+            setProfile(null);
+          }
+        } else {
+          // User is logged out, so clear the profile
           setProfile(null);
         }
+        
+        // Loading is finished after the first check
+        setLoading(false);
       }
     );
 
-    // 5. Clean up the listener when the component unmounts
+    // Cleanup the subscription on component unmount
     return () => {
       subscription?.unsubscribe();
     };
-  }, []); // The empty array ensures this effect runs only once
+  }, []); // Empty array ensures this runs only once
 
   const value = {
     session,
@@ -57,7 +55,6 @@ export const AuthProvider = ({ children }) => {
     signOut: () => supabase.auth.signOut(),
   };
 
-  // Render children only after the initial loading check is complete
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}

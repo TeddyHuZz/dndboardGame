@@ -26,6 +26,7 @@
   .header-right {
     flex-basis: 300px;
     flex-shrink: 0;
+    flex: 1;
   }
 
   .header-right {
@@ -39,11 +40,35 @@
     gap: 2rem;
   }
   
-  .header-logo a {
+  .header-logo img {
+    height: 4.5rem;
+    width: auto;
+    object-fit: contain;
+    cursor: pointer;
+  }
+
+  .header-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     text-decoration: none;
-    font-size: 24px;
-    font-weight: 700;
+  }
+
+  .header-logo-text {
+    text-decoration: none;
     color: #ffffff;
+    font-size: 16px;
+    transition: color 0.3s ease;
+    font-weight: 500;
+    align-items: center;
+  }
+
+  .header-logo-text {
+    color: #ffffff;
+    font-size: 1.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
   }
   
   .navigation-menu {
@@ -103,24 +128,14 @@
     background-color: #865e17;
   }
   
-  .user-profile span {
+  .user-profile-button {
     font-weight: bold;
     color: #ffffff;
-  }
-
-  .logoutButton {
-    background-color: #D98B09;
-    color: rgb(0, 0, 0);
-    padding: 0.5rem 1rem;
-    border-radius: 10px;
-    border: none;
     text-decoration: none;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: color 0.3s ease;
+    font-weight: 500;
     cursor: pointer;
-    font-weight: 600;
-  }
-
-  .logoutButton:hover {
-    background-color: #865e17;
+    background-color: transparent;
+    border: none;
   }

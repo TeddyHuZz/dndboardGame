@@ -1,11 +1,26 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
+
+const DropdownMenu = ({ onSignOut }) => {
+  return (
+    <div className="dropdown-menu">
+      <Link to="/profile">Profile</Link>
+      <Link to="/logout" onClick={onSignOut}>Log Out</Link>
+    </div>
+  );
+};
 
 const Header = ({ variant = 'full' }) => {
   const { session, signOut, profile } = useAuth();
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -21,11 +36,14 @@ const Header = ({ variant = 'full' }) => {
   if (variant === 'minimal') {
     return (
       <header className="header">
-        <div className="header-content-wrapper">
-          <div className="header-logo">
-            <Link to="/">Game Logo</Link>
-          </div>
-        </div>
+            <div className="header-content-wrapper">
+              <div className="header-logo">
+                <Link to="/" className="header-logo-link">
+                  <img src="/images/logo/gameLogo.png" alt="Game Logo" />
+                  <span className="header-logo-text">Realm Quest</span>
+                </Link>
+              </div>
+            </div>
       </header>
     );
   }
@@ -35,10 +53,13 @@ const Header = ({ variant = 'full' }) => {
     <header className="header">
       <div className="header-content-wrapper">
         <div className="header-left">
-          <div className="header-logo">
-            <Link to="/">Game Logo</Link>
+            <div className="header-logo">
+              <Link to="/" className="header-logo-link">
+                <img src="/images/logo/gameLogo.png" alt="Game Logo" />
+                <span className="header-logo-text">Realm Quest</span>
+              </Link>
+            </div>
           </div>
-        </div>
 
         <div className="header-center">
           <nav className="navigation-menu">
@@ -51,12 +72,15 @@ const Header = ({ variant = 'full' }) => {
 
         <div className="header-right">
           {session ? (
-              <div className="user-profile">
-                {/* Corrected ternary operator with a fallback to the email */}
-                <span>Welcome back, {profile ? profile.username : session.user.email}</span>
-                <button onClick={handleSignOut} className="logoutButton">Log Out</button>
-              </div>
-            ) : (
+            <div className="user-profile">
+              {/* 5. Make the username clickable to toggle the dropdown */}
+              <button onClick={toggleDropdown} className="user-profile-button">
+                Welcome back, {profile ? profile.username : session.user.email}
+              </button>
+              {/* 6. Conditionally render the dropdown */}
+              {isOpen && <DropdownMenu onSignOut={handleSignOut} />}
+            </div>
+          ) : (
             // If user is not logged in
             <div className="auth-buttons">
               <Link to="/login" className="signinButton">Log In</Link>
@@ -69,4 +93,6 @@ const Header = ({ variant = 'full' }) => {
   );
 };
 
+
+export { DropdownMenu };
 export default Header;

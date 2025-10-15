@@ -10,6 +10,7 @@ import MinimalLayout from '../../layouts/MinimalLayout';
 import Landing from '../Landing/Landing';
 import Signin from '../../components/Authentication/Signin';
 import Signup from '../../components/Authentication/Signup';
+import GameDashboard from '../Game Dashboard/GameDashboard';
 
 const LocationHandler = () => {
   const location = useLocation();
@@ -33,6 +34,7 @@ function App() {
           {/* --- Routes with the FULL header --- */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Landing />} />
+            <Route path="/game-dashboard" element={<GameDashboard />} />
           </Route>
 
           {/* --- Routes with the MINIMAL header --- */}
