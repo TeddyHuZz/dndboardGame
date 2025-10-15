@@ -2,16 +2,16 @@ import { useState } from "react";
 import "./GameDashboard.css";
 import CreateGamePopup from "../../components/Popup/CreateGamePopup";
 import { useAuth } from "../../context/AuthContext";
+import { useRoomSession } from "../../context/RoomSessionContext";
 import { supabase } from "../../supabaseClient";
 
 export function GameDashboard() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [sessionDetails, setSessionDetails] = useState(null);
+  const { setPlayers, setSessionDetails } = useRoomSession();
   const { session, profile } = useAuth();
 
   const handleClosePopup = () => {
     setIsPopupVisible(false);
-    setSessionDetails(null); // Clear details when closing
   };
 
   const generateSessionCode = (length = 7) => {
@@ -42,9 +42,10 @@ export function GameDashboard() {
 
     if (error) {
       console.error("Error creating room session:", error);
-      alert("Failed to create room. The session code may already exist.");
+      alert("Failed to create a new game room. Please check the console for errors.");
     } else {
       setSessionDetails(data);
+      setPlayers(profile ? [profile] : []);
       setIsPopupVisible(true);
     }
   };
@@ -70,8 +71,6 @@ export function GameDashboard() {
       {isPopupVisible && (
         <CreateGamePopup
           onClose={handleClosePopup}
-          sessionDetails={sessionDetails}
-          hostProfile={profile}
         />
       )}
     </div>

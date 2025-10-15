@@ -1,16 +1,24 @@
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
-import { AuthProvider, useAuth } from '../../context/AuthContext';
+import { AuthProvider, useAuth } from "../../context/AuthContext";
+import { RoomSessionProvider } from "../../context/RoomSessionContext"; // Ensure this path is correct
 
 // Layouts
-import MainLayout from '../../layouts/MainLayout';
-import MinimalLayout from '../../layouts/MinimalLayout';
+import MainLayout from "../../layouts/MainLayout";
+import MinimalLayout from "../../layouts/MinimalLayout";
 
 // Pages
-import Landing from '../Landing/Landing';
-import Signin from '../../components/Authentication/Signin';
-import Signup from '../../components/Authentication/Signup';
-import GameDashboard from '../Game Dashboard/GameDashboard';
+import Landing from "../Landing/Landing";
+import Signin from "../../components/Authentication/Signin";
+import Signup from "../../components/Authentication/Signup";
+import GameDashboard from "../Game Dashboard/GameDashboard";
 
 const LocationHandler = () => {
   const location = useLocation();
@@ -27,12 +35,20 @@ const LocationHandler = () => {
 
 const PrivateRoutes = () => {
   const { session } = useAuth();
-  return session ? <Outlet /> : <Navigate to="/login" replace />;
+  // If authenticated, render child routes within the RoomSessionProvider.
+  // Otherwise, redirect.
+  return session ? (
+    <RoomSessionProvider>
+      <Outlet />
+    </RoomSessionProvider>
+  ) : (
+    <Navigate to="/login" replace />
+  );
 };
 
 const PublicRoutes = () => {
   const { session } = useAuth();
-  return !session ? <Outlet /> : <Navigate to="/game-dashboard" replace />;
+  return !session ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 function App() {
@@ -47,6 +63,7 @@ function App() {
           </Route>
 
           {/* --- Routes for logged-in users --- */}
+          {/* This structure is now correct. The provider is inside the element. */}
           <Route element={<PrivateRoutes />}>
             <Route element={<MainLayout />}>
               <Route path="/game-dashboard" element={<GameDashboard />} />

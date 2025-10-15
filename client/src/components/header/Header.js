@@ -8,7 +8,7 @@ const DropdownMenu = ({ onSignOut }) => {
   return (
     <div className="dropdown-menu">
       <Link to="/profile">Profile</Link>
-      <Link to="/logout" onClick={onSignOut}>Log Out</Link>
+      <button onClick={onSignOut} className="dropdown-logout-button">Log Out</button>
     </div>
   );
 };

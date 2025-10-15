@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
             // Fetch profile only when a session exists
             const { data, error } = await supabase
               .from('user')
-              .select('username')
+              .select('username', 'user_id')
               .eq('user_id', session.user.id)
               .single();
 
