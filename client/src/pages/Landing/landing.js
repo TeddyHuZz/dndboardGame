@@ -1,6 +1,4 @@
-"use client";
-
-import { use, useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom";
 import "./Landing.css";
 
@@ -63,44 +61,75 @@ export function Landing() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let ticking = false;
+    let rafId = null;
+    let isTabVisible = true;
+  
+    const handleVisibilityChange = () => {
+      isTabVisible = !document.hidden;
+      if (document.hidden && rafId) {
+        // Cancel any pending RAF when tab becomes hidden
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+        ticking = false;
+      }
+    };
+  
     const handleScroll = () => {
-      const scrollPosition = window.scrollY
-      const windowHeight = window.innerHeight
-      const documentHeight = document.documentElement.scrollHeight - windowHeight
-
-      // Calculate scroll progress (0 to 1)
-      const progress = Math.min(scrollPosition / documentHeight, 1)
-      setScrollProgress(progress)
-
-      // Determine which banner to show based on scroll position
-      const bannerIndex = Math.min(Math.floor(progress * banners.length), banners.length - 1)
-      setCurrentBanner(bannerIndex)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+      // Don't process scroll if tab is hidden
+      if (!isTabVisible) return;
+  
+      if (!ticking) {
+        rafId = window.requestAnimationFrame(() => {
+          const scrollPosition = window.scrollY;
+          const windowHeight = window.innerHeight;
+          const documentHeight = document.documentElement.scrollHeight - windowHeight;
+  
+          // Calculate scroll progress (0 to 1)
+          const progress = Math.min(scrollPosition / documentHeight, 1);
+          setScrollProgress(progress);
+  
+          // Determine which banner to show based on scroll position
+          const bannerIndex = Math.min(Math.floor(progress * banners.length), banners.length - 1);
+          setCurrentBanner(bannerIndex);
+  
+          ticking = false;
+          rafId = null;
+        });
+        ticking = true;
+      }
+    };
+  
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
   }, [])
 
-  const banner = banners[currentBanner]
+  // Memoize banner to prevent unnecessary recalculations
+  const banner = useMemo(() => banners[currentBanner], [currentBanner]);
 
   return (
     <div className="banner-container">
       {/* Main Banner Section - Fixed */}
       <section className="banner-section">
-        {/* Background Image with Parallax */}
+        {/* Background Image with Parallax - ONLY RENDER CURRENT BANNER */}
         <div className="banner-background-wrapper">
-          {banners.map((b, index) => (
-            <div
-              key={b.id}
-              className="banner-background"
-              style={{
-                opacity: currentBanner === index ? 1 : 0,
-              }}
-            >
-              <img src={b.image || "/placeholder.svg"} alt={b.title} className="banner-image" />
-              <div className="banner-gradient" />
-            </div>
-          ))}
+          <div className="banner-background" style={{ opacity: 1 }}>
+            <img 
+              src={banner.image || "/placeholder.svg"} 
+              alt={banner.title} 
+              className="banner-image"
+              key={banner.id} // Force re-render on change
+            />
+            <div className="banner-gradient" />
+          </div>
         </div>
 
         {/* Content */}

@@ -25,7 +25,12 @@ const LocationHandler = () => {
 
   useEffect(() => {
     if (location.state?.message) {
-      alert(location.state.message);
+      // Use setTimeout to avoid blocking the render
+      setTimeout(() => {
+        alert(location.state.message);
+      }, 100);
+      
+      // Clear the message immediately to prevent re-showing
       window.history.replaceState({}, document.title);
     }
   }, [location]);

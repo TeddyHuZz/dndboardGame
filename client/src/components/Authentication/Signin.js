@@ -26,19 +26,29 @@ const Signin = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        
+        // Prevent double-submission
+        if (e.target.disabled) return;
+        e.target.disabled = true;
+        
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { error, data } = await supabase.auth.signInWithPassword({
                 email: formData.email,
                 password: formData.password,
             });
-
+    
             if (error) throw error;
-
-            // On successful login, navigate to the main app page
-            navigate("/", { state: { message: "Login successfully!" } });
-
+    
+            console.log('Login successful, navigating...');
+            
+            // Small delay before navigation to let auth state settle
+            setTimeout(() => {
+                navigate("/game-dashboard", { replace: true });
+            }, 300);
+    
         } catch (error) {
             alert(error.error_description || error.message);
+            e.target.disabled = false; // Re-enable on error
         }
     };
 

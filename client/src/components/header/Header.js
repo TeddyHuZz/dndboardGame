@@ -25,12 +25,15 @@ const Header = ({ variant = 'full' }) => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/', { state: { message: 'Signed out successfully!' } });
+      // Wait for signout to complete before navigating
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 100);
     } catch (error) {
+      console.error('Sign out error:', error);
       alert(error.message);
     }
-    navigate('/', { state: { message: 'Signed out successfully!' } });
-  }
+  };
 
   // The minimal header
   if (variant === 'minimal') {

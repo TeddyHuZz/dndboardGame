@@ -61,21 +61,6 @@
   font-size: 1.1rem;
 }
 
-.create-game-popup-content button {
-  background-color: #555;
-  color: white;
-  border: 1px solid #777;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
-
-.create-game-popup-content button:hover {
-  background-color: #777;
-}
-
 .create-game-top-menu {
   display: flex;
   justify-content: space-between;
