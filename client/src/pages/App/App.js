@@ -19,6 +19,8 @@ import Landing from "../Landing/Landing";
 import Signin from "../../components/Authentication/Signin";
 import Signup from "../../components/Authentication/Signup";
 import GameDashboard from "../Game Dashboard/GameDashboard";
+import CharacterSelection from "../Character Selection/CharacterSelection";
+import Gameplay from "../Gameplay/Gameplay";
 
 const LocationHandler = () => {
   const location = useLocation();
@@ -72,6 +74,10 @@ function App() {
           <Route element={<PrivateRoutes />}>
             <Route element={<MainLayout />}>
               <Route path="/game-dashboard" element={<GameDashboard />} />
+            </Route>
+            <Route element={<MinimalLayout />}>
+              <Route path="/character-selection" element={<CharacterSelection />} />
+              <Route path="/gameplay" element={<Gameplay />} />
             </Route>
           </Route>
 

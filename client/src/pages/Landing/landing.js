@@ -18,7 +18,7 @@ const banners = [
     title: "Choose Your Champion",
     subtitle: "From Mighty Warriors to Arcane Sorcerers",
     description:
-      "Explore a diverse roster of playable classes and races. Will you be a stoic dwarf warrior, a nimble elven ranger, or a wise human wizard? Each hero offers a unique path to victory.",
+      "Explore a diverse roster of playable classes and races. Will you be a stoic dwarf warrior, a kind elven healer, or a wise human wizard? Each hero offers a unique path to victory.",
     image: "/images/banners/fantasy-adventurer.jpg",
     cta: "Discover the Heroes",
     path: "/characters",

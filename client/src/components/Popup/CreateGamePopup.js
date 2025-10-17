@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useRoomSession } from "../../context/RoomSessionContext";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../supabaseClient";
+import { useNavigate } from "react-router-dom";
 import "./CreateGamePopup.css";
 
 function CreateGamePopup({ onClose }) {
@@ -9,6 +10,7 @@ function CreateGamePopup({ onClose }) {
   const { profile, session } = useAuth();
   const timeoutRef = useRef(null);
   const isMountedRef = useRef(true);
+  const navigate = useNavigate();
 
   // Determine if current user is the host
   const isHost = sessionDetails?.user_id === session?.user?.id;
@@ -172,16 +174,22 @@ function CreateGamePopup({ onClose }) {
         },
         (payload) => {
           console.log('Room session updated:', payload);
-          
+          const newStatus = payload.new.session_status;
+
           // Update session details (including new host)
           setSessionDetails(payload.new);
           
           // If room is closed, exit
-          if (payload.new.session_status === 'Closed') {
+          if (newStatus === 'Closed') {
             alert('The room has been closed.');
             setSessionDetails(null);
             setPlayers([]);
             onClose();
+          }
+
+          // If game status changes to 'In game', navigate all players
+          if (newStatus === 'In game') {
+            navigate('/character-selection');
           }
         }
       )
@@ -192,7 +200,7 @@ function CreateGamePopup({ onClose }) {
     return () => {
       supabase.removeChannel(sessionChannel);
     };
-  }, [sessionDetails?.session_id, setSessionDetails, onClose]);
+  }, [sessionDetails?.session_id, setSessionDetails, onClose, navigate]);
 
   const handleCopy = () => {
     if (sessionDetails?.session_code) {
@@ -261,6 +269,27 @@ function CreateGamePopup({ onClose }) {
     setPlayers([]);
     onClose();
   };
+
+  const handleStartGame = async () => {
+    // Ensure only the host can start the game
+    if (!isHost || !sessionDetails?.session_id) {
+      console.log("Only the host can start the game.");
+      return;
+    }
+
+    try {
+      // This database update will be detected by all clients, triggering their navigation
+      await supabase
+        .from("room_sessions")
+        .update({ session_status: 'In game'})
+        .eq("session_id", sessionDetails.session_id);
+
+      console.log("Game start signal sent successfully.");
+    } catch (error) {
+      console.error("Error starting game", error);
+      alert("Only the host can start the gane!");
+    }
+  }
     
   return (
     <div className="create-game-popup-overlay" onClick={handleExitRoom}>
@@ -287,7 +316,7 @@ function CreateGamePopup({ onClose }) {
 
         <div className="create-game-bottom-menu">
           <button onClick={handleExitRoom}>Exit</button>
-          <button>Start Game</button>
+          <button onClick={handleStartGame}>Start Game</button>
         </div>
       </div>
     </div>
