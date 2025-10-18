@@ -1,0 +1,30 @@
+.gameplay-banner img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -10; 
+    filter: brightness(0.2);
+}
+
+.top-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.top-left {
+    margin-top: 3rem;
+    margin-left: 3rem;
+}
+
+.top-right {
+    margin-top: 5rem;
+    margin-right: 4rem;
+}
+
+.side-content {
+    margin-top: 5rem;
+    margin-left: 2px;
+}

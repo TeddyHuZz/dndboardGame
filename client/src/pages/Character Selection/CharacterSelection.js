@@ -118,16 +118,32 @@ export function CharacterSelection() {
       });
     }
 
-    const { data, error } = await supabase
+    const { data: characterData, error: characterError } = await supabase
+      .from("character_classes")
+      .select("base_hp")
+      .eq("character_id", characterId)
+      .single();
+
+    if (characterError || !characterData) {
+      console.error("Error fetching character data", characterError);
+    }
+
+    const baseHp = characterData.base_hp;
+
+    const { data: updateData, error: updateError } = await supabase
       .from("room_players")
-      .update({ character_id: characterId })
+      .update({ 
+        character_id: characterId,
+        current_hp: baseHp,
+        max_hp: baseHp
+       })
       .eq("session_id", sessionDetails.session_id)
       .eq("user_id", profile.user_id);
 
-    if (error) {
-      console.error("Error updating character selection", error);
+    if (updateError) {
+      console.error("Error updating character selection", updateError);
     } else {
-      console.log("Character selection updated successfully");
+      console.log("Character selection and health updated successfully");
     }
   };
 

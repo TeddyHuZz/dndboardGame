@@ -77,6 +77,9 @@ function App() {
             </Route>
             <Route element={<MinimalLayout />}>
               <Route path="/character-selection" element={<CharacterSelection />} />
+            </Route>
+            {/* Zero header for gameplay */}
+            <Route>
               <Route path="/gameplay" element={<Gameplay />} />
             </Route>
           </Route>

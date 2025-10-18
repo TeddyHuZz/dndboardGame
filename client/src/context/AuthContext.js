@@ -21,13 +21,11 @@ export const AuthProvider = ({ children }) => {
       async (event, newSession) => {
         console.log(`-> Auth event received: ${event}`);
         
-        // ** THE CRITICAL FIX IS HERE **
-        // If we get a SIGNED_IN event, but we already have a session for the same user,
         // then it's a redundant event from a tab focus. We can safely ignore it.
         const currentSession = sessionRef.current;
         if (event === 'SIGNED_IN' && currentSession?.user?.id === newSession?.user?.id) {
           console.log('-> Redundant event for same user. Ignoring to prevent freeze.');
-          setLoading(false); // Ensure app is usable
+          setLoading(false); // Ensure app is usable if this is the first event
           return;
         }
 
@@ -36,11 +34,18 @@ export const AuthProvider = ({ children }) => {
 
         if (newSession) {
           try {
-            const { data, error } = await supabase
+            // Add timeout to prevent hanging queries
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+            );
+            
+            const fetchPromise = supabase
               .from('user')
               .select('username, user_id')
               .eq('user_id', newSession.user.id)
               .single();
+
+            const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
             if (error) throw error;
             setProfile(data);
