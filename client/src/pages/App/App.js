@@ -8,7 +8,8 @@ import {
 } from "react-router-dom";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "../../context/AuthContext";
-import { RoomSessionProvider } from "../../context/RoomSessionContext"; // Ensure this path is correct
+import { RoomSessionProvider } from "../../context/RoomSessionContext";
+import { SocketProvider } from "../../context/SocketContext";
 
 // Layouts
 import MainLayout from "../../layouts/MainLayout";
@@ -21,6 +22,8 @@ import Signup from "../../components/Authentication/Signup";
 import GameDashboard from "../Game Dashboard/GameDashboard";
 import CharacterSelection from "../Character Selection/CharacterSelection";
 import Gameplay from "../Gameplay/Gameplay";
+import ScannerPage from "../Scan QR/ScannerPage";
+import CombatRoom from "../Combat/CombatRoom";
 
 const LocationHandler = () => {
   const location = useLocation();
@@ -42,11 +45,11 @@ const LocationHandler = () => {
 
 const PrivateRoutes = () => {
   const { session } = useAuth();
-  // If authenticated, render child routes within the RoomSessionProvider.
-  // Otherwise, redirect.
   return session ? (
     <RoomSessionProvider>
-      <Outlet />
+      <SocketProvider>
+        <Outlet />
+      </SocketProvider>
     </RoomSessionProvider>
   ) : (
     <Navigate to="/login" replace />
@@ -81,6 +84,8 @@ function App() {
             {/* Zero header for gameplay */}
             <Route>
               <Route path="/gameplay" element={<Gameplay />} />
+              <Route path="/scanner" element={<ScannerPage />} />
+              <Route path="/combat/:enemySlug" element={<CombatRoom />} />
             </Route>
           </Route>
 

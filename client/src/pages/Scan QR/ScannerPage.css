@@ -1,0 +1,58 @@
+.scanner-page-banner img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -10; 
+    filter: brightness(0.1);
+}
+
+.scanner-page-top-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.scanner-page-top-left {
+    margin-top: 5rem;
+    margin-left: 4rem;
+}
+
+.scanner-page-top-right {
+    margin-top: 5rem;
+    margin-right: 4rem;
+}
+
+.scanner-page-top-left button {
+    background-color: #D98B09;
+    color: rgb(0, 0, 0);
+    padding: 1.2rem 2.5rem;
+    border-radius: 10px;
+    border: none;
+    text-decoration: none;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.scanner-page-top-left button:hover {
+    background-color: #865e17;
+}
+
+.scanner-page-middle-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.scanner-page-middle-content h1 {
+    color: #D98B09;
+    margin-bottom: 1.5rem;
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}

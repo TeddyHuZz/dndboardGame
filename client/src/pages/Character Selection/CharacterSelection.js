@@ -2,15 +2,15 @@ import { supabase } from "../../supabaseClient";
 import { useState, useEffect } from "react";
 import { useRoomSession } from "../../context/RoomSessionContext";
 import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";  // ✅ Use SocketContext
 import { useNavigate } from "react-router-dom";
-import io from 'socket.io-client';
 import "./CharacterSelection.css";
 
 export function CharacterSelection() {
   const { sessionDetails } = useRoomSession();
   const { profile } = useAuth();
+  const { socket } = useSocket();  // ✅ Get socket from context
   const navigate = useNavigate();
-  const [socket, setSocket] = useState(null);
   const [playerSelections, setPlayerSelections] = useState({});
    
   const WarriorID = "51d95f67-01c0-42e8-aed7-85435742af4d";
@@ -20,36 +20,31 @@ export function CharacterSelection() {
   const [characterHealer, setCharacterHealer] = useState(null);
   const [characterMage, setCharacterMage] = useState(null);
 
+  // ✅ Setup socket listeners (but don't create socket)
   useEffect(() => {
-    const socketURL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
-    const newSocket = io(socketURL);
-    setSocket(newSocket);
-
-    newSocket.on('connect', () => {
-      console.log(`Connected to the server with ID: ${newSocket.id}`);
-
-      // Join the room once connected
-      if (sessionDetails?.session_id) {
-        newSocket.emit('join_room', sessionDetails.session_id);
-      }
-    });
+    if (!socket) return;
 
     // Listener for selection updates from the server
-    newSocket.on('selection_update', (selections) => {
+    const handleSelectionUpdate = (selections) => {
       console.log('Received selection update: ', selections);
       setPlayerSelections(selections);
-    });
+    };
 
     // Listener to start the game
-    newSocket.on('start_game', () => {
+    const handleStartGame = () => {
       console.log('ALL players are ready! Starting the game...');
       navigate('/gameplay');
-    });
-
-    return () => {
-      newSocket.disconnect();
     };
-  }, [sessionDetails, navigate]);
+
+    socket.on('selection_update', handleSelectionUpdate);
+    socket.on('start_game', handleStartGame);
+
+    // Cleanup listeners
+    return () => {
+      socket.off('selection_update', handleSelectionUpdate);
+      socket.off('start_game', handleStartGame);
+    };
+  }, [socket, navigate]);
 
   useEffect(() => {
     const fetchCharacterWarrior = async () => {
@@ -69,7 +64,6 @@ export function CharacterSelection() {
     fetchCharacterWarrior();
   }, [WarriorID]);
 
-
   useEffect(() => {
     const fetchCharacterHealer = async () => {
       const { data, error } = await supabase
@@ -87,7 +81,6 @@ export function CharacterSelection() {
 
     fetchCharacterHealer();
   }, [HealerID]);
-
 
   useEffect(() => {
     const fetchCharacterMage = async () => {

@@ -25,29 +25,33 @@ io.on('connection', (socket) => {
     socket.on('join_room', async (sessionId) => {
         socket.join(sessionId);
         console.log(`Socket ${socket.id} joined room ${sessionId}`);
-
-        // initialize game state for this session if not exists
+    
+        // ✅ Always count current players (don't just rely on cached state)
+        const { count: currentPlayerCount, error: countError } = await supabase
+            .from('room_players')
+            .select('*', {count: 'exact', head: true })
+            .eq('session_id', sessionId);
+    
+        if (countError || currentPlayerCount === null) {
+            console.error(`Error fetching player count for ${sessionId}: `, countError);
+            socket.emit('error', 'Could not find player count');
+            return;
+        }
+    
+        // ✅ Initialize OR update game state
         if (!gameStates[sessionId]) {
-            // Fetch max_players from Supabase
-            const { count, error } = await supabase
-                .from('room_players')
-                .select('*', {count: 'exact', head: true }) // Fetch total count of players in the room
-                .eq('session_id', sessionId)
-
-            if (error || count === null ) {
-                console.error(`Error fetching player count for ${sessionId}: `, error);
-                // Emit error to client
-                socket.emit('error', 'Could not find player count');
-                return;
-            }
-
             gameStates[sessionId] = {
                 selections: {},
-                totalPlayers: count
+                totalPlayers: currentPlayerCount
             };
-            console.log(`Initialized state for room ${sessionId} with ${count} players.`);
+            console.log(`Initialized state for room ${sessionId} with ${currentPlayerCount} players.`);
+        } else {
+            // ✅ Update the player count for existing state
+            gameStates[sessionId].totalPlayers = currentPlayerCount;
+            console.log(`Updated state for room ${sessionId} to ${currentPlayerCount} players.`);
         }
-
+    
+        // Send current selections to the newly joined player
         socket.emit('selection_update', gameStates[sessionId].selections);
     });
 
@@ -72,13 +76,48 @@ io.on('connection', (socket) => {
             // Check if all players are ready
             const readyPlayerCount = Object.keys(roomState.selections).length;
             if (readyPlayerCount === roomState.totalPlayers) {
-                io.to(sessionId).emit('start_game');
-                console.log(`ALL players are ready! Starting the game...`);
-
-                // Clean up the game state
-                delete gameStates[sessionId];
-            }  
+                console.log(`ALL players are ready! Starting the game in 500ms...`);
+                
+                // ✅ Add small delay to ensure DB writes complete
+                setTimeout(() => {
+                    io.to(sessionId).emit('start_game');
+                    console.log(`Game started for room ${sessionId}`);
+                    delete gameStates[sessionId];
+                }, 500);
+            }
         }
+    });
+
+    // Add this new socket event handler in server.js
+    socket.on('qr_code_scanned', ({ sessionId, path, scannedBy }) => {
+        console.log(`QR code scanned by ${scannedBy} in session ${sessionId}, navigating all players to ${path}`);
+        
+        // Broadcast to ALL players in the session
+        io.to(sessionId).emit('navigate_to_page', {
+            path: path,
+            scannedBy: scannedBy
+        });
+    });
+
+    socket.on('update_enemy_hp', async (data) => {
+        const { encounterId, newHp } = data;
+    
+        const { data: updateResult, error } = await supabase
+            .from('room_encounters')
+            .update({ current_hp: newHp })
+            .eq('encounter_id', encounterId);
+    
+        if (error) {
+            console.error(`Error updating enemy HP for encounter ${encounterId}: `, error);
+            return;
+        }
+    
+        io.to(updateResult.sessionId).emit('enemy_hp_update', {
+            encounter_id: encounterId,
+            current_hp: newHp,
+            max_hp: updateResult.maxHp,
+            is_alive: newHp > 0
+        });
     });
 
     socket.on('disconnect', () => {

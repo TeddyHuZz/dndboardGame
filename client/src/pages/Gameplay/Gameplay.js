@@ -4,12 +4,12 @@ import GameSettings from "../../components/Gameplay/GameSettings";
 import OtherPlayersHP from "../../components/Gameplay/OtherPlayersHP";
 import PlayerInformation from "../../components/Gameplay/PlayerInformation";
 import { useRoomSession } from "../../context/RoomSessionContext";
-import { useState, useEffect } from "react";
+import { useSocket } from "../../context/SocketContext";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import io from 'socket.io-client';
 
 export function Gameplay() {
-  const [socket, setSocket] = useState(null);
+  const { socket } = useSocket();
   const { sessionDetails } = useRoomSession();
   const navigate = useNavigate();
    
@@ -20,35 +20,28 @@ export function Gameplay() {
       navigate('/game-dashboard');
       return;
     }
+  }, [sessionDetails?.session_id, navigate]);
 
-    const socketURL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
-    const newSocket = io(socketURL, {
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      timeout: 10000,
-    });
-    
-    setSocket(newSocket);
+  // Listen for QR scan navigation events
+  useEffect(() => {
+    if (!socket) {
+      console.log('No socket available for navigation listener');
+      return;
+    }
 
-    newSocket.on('connect', () => {
-      console.log(`Connected to the server with ID: ${newSocket.id}`);
-      newSocket.emit('join_room', sessionDetails.session_id);
-    });
+    const handleNavigateToPage = (data) => {
+      console.log(`🎯 Received navigation request: ${data.path} (scanned by: ${data.scannedBy})`);
+      navigate(data.path);
+    };
 
-    newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-    });
-
-    newSocket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
-    });
+    console.log('🔌 Setting up navigate_to_page listener');
+    socket.on('navigate_to_page', handleNavigateToPage);
 
     return () => {
-      console.log('Cleaning up socket connection');
-      newSocket.removeAllListeners();
-      newSocket.disconnect();
+      console.log('🧹 Cleaning up navigate_to_page listener');
+      socket.off('navigate_to_page', handleNavigateToPage);
     };
-  }, [sessionDetails?.session_id]); // Only depend on session_id, not the entire object or navigate
+  }, [socket, navigate]);
 
   return (
     <div className="character-selection-container">
@@ -79,7 +72,7 @@ export function Gameplay() {
 
       {/* Bottom section */}
       <div className="bottom-content">
-        
+        <button onClick={() => navigate('/scanner')}>Scan QR</button>
       </div>
     </div>
   );
