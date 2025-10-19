@@ -21,7 +21,8 @@ export function CharacterSelection() {
   const [characterMage, setCharacterMage] = useState(null);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001');
+    const socketURL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
+    const newSocket = io(socketURL);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {

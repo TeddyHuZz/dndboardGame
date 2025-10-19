@@ -21,7 +21,8 @@ export function Gameplay() {
       return;
     }
 
-    const newSocket = io('http://localhost:3001', {
+    const socketURL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
+    const newSocket = io(socketURL, {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       timeout: 10000,
