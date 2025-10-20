@@ -101,23 +101,81 @@ io.on('connection', (socket) => {
 
     socket.on('update_enemy_hp', async (data) => {
         const { encounterId, newHp } = data;
+        
+        try {
+            // First, get the encounter to find the session_id
+            const { data: encounterData, error: fetchError } = await supabase
+                .from('room_encounters')
+                .select('session_id, max_hp')
+                .eq('encounter_id', encounterId)
+                .single();
     
-        const { data: updateResult, error } = await supabase
-            .from('room_encounters')
-            .update({ current_hp: newHp })
-            .eq('encounter_id', encounterId);
+            if (fetchError || !encounterData) {
+                console.error(`Error fetching encounter ${encounterId}:`, fetchError);
+                return;
+            }
     
-        if (error) {
-            console.error(`Error updating enemy HP for encounter ${encounterId}: `, error);
-            return;
+            // Then update the HP
+            const { error: updateError } = await supabase
+                .from('room_encounters')
+                .update({ 
+                    current_hp: newHp,
+                    is_alive: newHp > 0
+                })
+                .eq('encounter_id', encounterId);
+    
+            if (updateError) {
+                console.error(`Error updating enemy HP for encounter ${encounterId}:`, updateError);
+                return;
+            }
+    
+            console.log(`Updated encounter ${encounterId} HP to ${newHp} for session ${encounterData.session_id}`);
+    
+            // Emit to all players in the session
+            io.to(encounterData.session_id.toString()).emit('enemy_hp_update', {
+                encounter_id: encounterId,
+                current_hp: newHp,
+                max_hp: encounterData.max_hp,
+                is_alive: newHp > 0
+            });
+    
+        } catch (err) {
+            console.error('Error in update_enemy_hp handler:', err);
         }
+    });
+
+    socket.on('update_player_hp', async (data) => {
+        const { sessionId, userId, newHp } = data;
+        
+        try {
+            console.log(`Updating player ${userId} HP to ${newHp} in session ${sessionId}`);
+            
+            // Update the player HP
+            const { error: updateError } = await supabase
+                .from('room_players')
+                .update({ 
+                    current_hp: newHp
+                })
+                .eq('session_id', sessionId)
+                .eq('user_id', userId);
     
-        io.to(updateResult.sessionId).emit('enemy_hp_update', {
-            encounter_id: encounterId,
-            current_hp: newHp,
-            max_hp: updateResult.maxHp,
-            is_alive: newHp > 0
-        });
+            if (updateError) {
+                console.error(`Error updating player HP for user ${userId}:`, updateError);
+                return;
+            }
+    
+            console.log(`Successfully updated player ${userId} HP to ${newHp}`);
+    
+            // Emit to all players in the session
+            io.to(sessionId.toString()).emit('player_hp_update', {
+                user_id: userId,
+                current_hp: newHp,
+                is_alive: newHp > 0
+            });
+    
+        } catch (err) {
+            console.error('Error in update_player_hp handler:', err);
+        }
     });
 
     socket.on('disconnect', () => {

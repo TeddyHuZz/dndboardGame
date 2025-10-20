@@ -105,6 +105,36 @@ const PlayerInformation = ({ socket }) => {
     }, [sessionDetails?.session_id, profile?.user_id]);
 
     useEffect(() => {
+        if (!sessionDetails?.session_id || !profile?.user_id) return;
+
+        // Subscribe to realtime changes for this player
+        const channel = supabase
+            .channel(`player_hp:${profile.user_id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'room_players',
+                    filter: `user_id=eq.${profile.user_id}`
+                },
+                (payload) => {
+                    console.log('Player HP updated via realtime:', payload);
+                    setPlayer(prevPlayer => ({
+                        ...prevPlayer,
+                        current_hp: payload.new.current_hp,
+                        max_hp: payload.new.max_hp
+                    }));
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [sessionDetails?.session_id, profile?.user_id]);
+
+    useEffect(() => {
         if (!socket) return;
 
         // Listen for HP updates

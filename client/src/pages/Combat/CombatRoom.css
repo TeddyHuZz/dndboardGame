@@ -1,3 +1,10 @@
+.combat-room-information {
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
 .combat-room-background img {
     position: absolute;
     top: 0;
@@ -5,7 +12,7 @@
     width: 100%;
     height: 100%;
     z-index: -10; 
-    filter: brightness(0.1);
+    filter: brightness(0.5);
 }
 
 .combat-room-top-right {
@@ -23,5 +30,16 @@
 
 .combat-room-middle {
     position: relative;
-    bottom: 150px;
+    bottom: 250px;
 }
+
+.combat-room-bottom {
+    position: relative;
+    bottom: 250px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+

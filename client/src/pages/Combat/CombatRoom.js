@@ -7,6 +7,7 @@ import EnemyInformation from '../../components/Combat/EnemyInformation';
 import GameSettings from '../../components/Gameplay/GameSettings';
 import OtherPlayersHP from '../../components/Gameplay/OtherPlayersHP';
 import PlayerInformation from '../../components/Gameplay/PlayerInformation';
+import CombatSystem from '../../components/Combat/CombatSystem';
 import './CombatRoom.css';
 
 const CombatRoom = ({ socket }) => {
@@ -144,6 +145,10 @@ const CombatRoom = ({ socket }) => {
 
             <div className="combat-room-middle">
                 <PlayerInformation socket={socket} />
+            </div>
+
+            <div className="combat-room-bottom">
+                <CombatSystem encounterId={encounterId} />
             </div>
         </div>
     );
