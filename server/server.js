@@ -26,7 +26,7 @@ io.on('connection', (socket) => {
         socket.join(sessionId);
         console.log(`Socket ${socket.id} joined room ${sessionId}`);
     
-        // ✅ Always count current players (don't just rely on cached state)
+        // Count current players
         const { count: currentPlayerCount, error: countError } = await supabase
             .from('room_players')
             .select('*', {count: 'exact', head: true })
@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
             return;
         }
     
-        // ✅ Initialize OR update game state
+        // Initialize OR update game state
         if (!gameStates[sessionId]) {
             gameStates[sessionId] = {
                 selections: {},
@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
             };
             console.log(`Initialized state for room ${sessionId} with ${currentPlayerCount} players.`);
         } else {
-            // ✅ Update the player count for existing state
+            // Update the player count for existing state
             gameStates[sessionId].totalPlayers = currentPlayerCount;
             console.log(`Updated state for room ${sessionId} to ${currentPlayerCount} players.`);
         }

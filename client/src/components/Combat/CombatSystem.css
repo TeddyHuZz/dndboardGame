@@ -1,111 +1,198 @@
 .combat-system-container {
-    background-color: rgba(10, 10, 10, 0.8);
-    border-radius: 15px;
-    padding: 1rem; /* Reduced padding */
-    width: 98%;
-    margin: auto;
-    border: 1px solid #444;
-    display: flex;
-    flex-direction: column;
-    height: 430px;
+  background-color: rgba(10, 10, 10, 0.8);
+  border-radius: 15px;
+  padding: 1rem; /* Reduced padding */
+  width: 98%;
+  margin: auto;
+  border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+  height: 430px;
 }
 
 .combat-system-question {
-    color: white;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    overflow: hidden; /* Prevent its own content from overflowing */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden; /* Prevent its own content from overflowing */
 }
 
 .combat-system-question-text p {
-    color: #e0e0e0;
-    font-size: 1rem; /* Reduced font size */
-    line-height: 1.4; /* Reduced line height */
-    margin-bottom: 0.5rem;
+  color: #e0e0e0;
+  font-size: 1rem; /* Reduced font size */
+  line-height: 1.4; /* Reduced line height */
+  margin-bottom: 0.5rem;
 }
 
 .combat-system-question-text p:last-child {
-    font-style: italic;
-    color: #aaa;
-    margin-bottom: 1rem;
+  font-style: italic;
+  color: #aaa;
+  margin-bottom: 1rem;
 }
 
 .editor-output-container {
-    display: flex;
-    flex-grow: 1; /* Allow this container to fill the remaining space */
-    gap: 1rem; /* Space between editor and output */
-    margin-top: 1rem;
-    min-height: 0; /* Important for flexbox children with overflow */
+  display: flex;
+  flex-grow: 1; /* Allow this container to fill the remaining space */
+  gap: 1rem; /* Space between editor and output */
+  margin-top: 1rem;
+  min-height: 0; /* Important for flexbox children with overflow */
 }
 
 .editor-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .output-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    position: relative;
-    bottom: 30px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  bottom: 30px;
 }
 
 .code-editor-window {
-    flex-grow: 1;
-    height: auto;
+  flex-grow: 1;
+  height: auto;
 }
 
 .combat-system-container button {
-    background-color: #D98B09;
-    color: #000;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
-    border: none;
-    font-size: 0.9rem; 
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 0.5rem;
-    display: block;
-    margin-top: 0.5rem;
-    flex-shrink: 0;
-    width: 100%;
+  background-color: #d98b09;
+  color: #000;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 0.5rem;
+  display: block;
+  margin-top: 0.5rem;
+  flex-shrink: 0;
+  width: 100%;
 }
 
 .combat-system-container button:hover {
-    background-color: #865e17;
+  background-color: #865e17;
 }
 
 .combat-system-container button:disabled {
-    background-color: #555;
-    cursor: not-allowed;
+  background-color: #555;
+  cursor: not-allowed;
 }
 
 .combat-system-container h4 {
-    color: #D98B09;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem; /* Reduced margin */
-    font-size: 1.2rem; /* Reduced font size */
+  color: #d98b09;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem; /* Reduced margin */
+  font-size: 1.2rem; /* Reduced font size */
 }
 
 .combat-system-container pre {
-    background-color: #1e1e1e;
-    color: #d4d4d4;
-    padding: 0.8rem; /* Reduced padding */
-    border-radius: 8px;
-    border: 1px solid #333;
-    min-height: 0; /* Remove min-height to allow shrinking */
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-size: 0.9rem; /* Reduced font size */
-    flex-grow: 1; /* Allow output to fill vertical space in its wrapper */
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 0.8rem; /* Reduced padding */
+  border-radius: 8px;
+  border: 1px solid #333;
+  min-height: 0; /* Remove min-height to allow shrinking */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 0.9rem; /* Reduced font size */
+  flex-grow: 1; /* Allow output to fill vertical space in its wrapper */
 }
 
 .combat-system-container pre .error {
-    color: #ff5555; /* Red for errors */
+  color: #ff5555; /* Red for errors */
+}
+
+/* Combat Result Overlay */
+.combat-result-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.combat-result-message {
+  text-align: center;
+  padding: 50px;
+  border-radius: 10px;
+  animation: scaleIn 0.6s ease-out;
+}
+
+.combat-result-message h1 {
+  font-size: 120px;
+  font-weight: bold;
+  margin: 0 0 30px 0;
+  text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+  letter-spacing: 10px;
+}
+
+.combat-result-message.victory h1 {
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.6);
+}
+
+.combat-result-message.defeat h1 {
+  color: #dc143c;
+  text-shadow: 0 0 20px rgba(220, 20, 60, 0.8), 0 0 40px rgba(220, 20, 60, 0.6);
+}
+
+.defeat-info {
+  font-size: 24px;
+  color: #ffa500;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+}
+
+.combat-result-button {
+  padding: 15px 50px;
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.combat-result-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

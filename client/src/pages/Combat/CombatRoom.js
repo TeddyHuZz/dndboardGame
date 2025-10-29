@@ -33,7 +33,7 @@ const CombatRoom = ({ socket }) => {
                 const { data: enemyData, error: enemyError } = await supabase
                     .from('enemy_data')
                     .select('enemy_id, enemy_name, base_hp')
-                    .eq('enemy_slug', enemySlug) // Assuming you have a slug field
+                    .eq('enemy_slug', enemySlug)
                     .single();
 
                 if (enemyError || !enemyData) {
@@ -57,7 +57,6 @@ const CombatRoom = ({ socket }) => {
                 let finalEncounterId;
 
                 if (existingEncounter) {
-                    // Encounter exists - use it
                     finalEncounterId = existingEncounter.encounter_id;
                     console.log('Existing encounter found:', finalEncounterId);
                 } else {

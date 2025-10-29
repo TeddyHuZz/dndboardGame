@@ -24,6 +24,7 @@ import CharacterSelection from "../Character Selection/CharacterSelection";
 import Gameplay from "../Gameplay/Gameplay";
 import ScannerPage from "../Scan QR/ScannerPage";
 import CombatRoom from "../Combat/CombatRoom";
+import TreasureRoom from "../Treasure Room/TreasureRoom";
 
 const LocationHandler = () => {
   const location = useLocation();
@@ -34,7 +35,7 @@ const LocationHandler = () => {
       setTimeout(() => {
         alert(location.state.message);
       }, 100);
-      
+
       // Clear the message immediately to prevent re-showing
       window.history.replaceState({}, document.title);
     }
@@ -79,13 +80,17 @@ function App() {
               <Route path="/game-dashboard" element={<GameDashboard />} />
             </Route>
             <Route element={<MinimalLayout />}>
-              <Route path="/character-selection" element={<CharacterSelection />} />
+              <Route
+                path="/character-selection"
+                element={<CharacterSelection />}
+              />
             </Route>
             {/* Zero header for gameplay */}
             <Route>
               <Route path="/gameplay" element={<Gameplay />} />
               <Route path="/scanner" element={<ScannerPage />} />
               <Route path="/combat/:enemySlug" element={<CombatRoom />} />
+              <Route path="/treasure/:encounterId" element={<TreasureRoom />} />
             </Route>
           </Route>
 

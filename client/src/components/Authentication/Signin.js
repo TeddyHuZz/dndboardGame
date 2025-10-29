@@ -48,7 +48,7 @@ const Signin = () => {
     
         } catch (error) {
             alert(error.error_description || error.message);
-            e.target.disabled = false; // Re-enable on error
+            e.target.disabled = false;
         }
     };
 

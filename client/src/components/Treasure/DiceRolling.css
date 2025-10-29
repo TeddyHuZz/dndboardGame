@@ -1,0 +1,266 @@
+.dice-rolling-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+}
+
+.dice-rolling-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 50px;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.6s ease-out;
+}
+
+.dice-rolling-title {
+  font-size: 48px;
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dice-rolling-subtitle {
+  font-size: 20px;
+  color: #7f8c8d;
+  margin-bottom: 40px;
+}
+
+.dice-container {
+  position: relative;
+  margin: 40px 0;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dice {
+  width: 150px;
+  height: 150px;
+  transition: transform 0.3s ease;
+}
+
+.dice.rolling {
+  animation: diceRoll 2s linear;
+}
+
+.dice-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+.dice-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: resultAppear 0.5s ease-out;
+}
+
+.result-number {
+  font-size: 80px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.result-text {
+  font-size: 28px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.dice-result.win .result-number {
+  color: #27ae60;
+  text-shadow: 0 0 20px rgba(39, 174, 96, 0.5);
+}
+
+.dice-result.win .result-text {
+  color: #27ae60;
+}
+
+.dice-result.lose .result-number {
+  color: #e74c3c;
+  text-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+}
+
+.dice-result.lose .result-text {
+  color: #e74c3c;
+}
+
+.roll-button {
+  padding: 20px 60px;
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+  margin-top: 20px;
+}
+
+.roll-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 7px 25px rgba(52, 152, 219, 0.6);
+}
+
+.roll-button:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.rolling-text {
+  font-size: 24px;
+  color: #3498db;
+  font-weight: bold;
+  margin-top: 20px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.outcome-message {
+  font-size: 28px;
+  font-weight: bold;
+  margin-top: 30px;
+  padding: 15px 30px;
+  border-radius: 10px;
+  animation: messageSlide 0.5s ease-out;
+}
+
+.outcome-message.win {
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+  border: 2px solid #27ae60;
+}
+
+.outcome-message.lose {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes diceRoll {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(180deg) scale(1.2) translateY(-20px);
+  }
+  50% {
+    transform: rotate(360deg) scale(1) translateY(0);
+  }
+  75% {
+    transform: rotate(540deg) scale(1.2) translateY(-20px);
+  }
+  100% {
+    transform: rotate(720deg) scale(1) translateY(0);
+  }
+}
+
+@keyframes resultAppear {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes messageSlide {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dice-rolling-card {
+    padding: 30px;
+    max-width: 90%;
+  }
+
+  .dice-rolling-title {
+    font-size: 32px;
+  }
+
+  .dice-rolling-subtitle {
+    font-size: 16px;
+  }
+
+  .dice {
+    width: 120px;
+    height: 120px;
+  }
+
+  .result-number {
+    font-size: 60px;
+  }
+
+  .result-text {
+    font-size: 20px;
+  }
+
+  .roll-button {
+    padding: 15px 40px;
+    font-size: 18px;
+  }
+
+  .outcome-message {
+    font-size: 20px;
+  }
+}
