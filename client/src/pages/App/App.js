@@ -25,6 +25,7 @@ import Gameplay from "../Gameplay/Gameplay";
 import ScannerPage from "../Scan QR/ScannerPage";
 import CombatRoom from "../Combat/CombatRoom";
 import TreasureRoom from "../Treasure Room/TreasureRoom";
+import LoadGame from "../../components/GameFile/LoadGame";
 
 const LocationHandler = () => {
   const location = useLocation();
@@ -78,6 +79,7 @@ function App() {
           <Route element={<PrivateRoutes />}>
             <Route element={<MainLayout />}>
               <Route path="/game-dashboard" element={<GameDashboard />} />
+              <Route path="/load-game" element={<LoadGame />} />
             </Route>
             <Route element={<MinimalLayout />}>
               <Route

@@ -9,45 +9,58 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function Gameplay() {
-  const { socket } = useSocket();
-  const { sessionDetails } = useRoomSession();
   const navigate = useNavigate();
-   
-  useEffect(() => {
-    // Redirect if no session details
-    if (!sessionDetails?.session_id) {
-      console.warn('No session details found, redirecting to dashboard');
-      navigate('/game-dashboard');
-      return;
-    }
-  }, [sessionDetails?.session_id, navigate]);
+  const { sessionDetails } = useRoomSession();
+  const { socket } = useSocket();
 
-  // Listen for QR scan navigation events
+  // --- Hook 1: Session data handling (now much simpler) ---
+  useEffect(() => {
+    if (!sessionDetails) {
+      console.warn(
+        "No session details found in context, redirecting to dashboard"
+      );
+      navigate("/game-dashboard");
+    }
+  }, [sessionDetails, navigate]);
+
+  // --- Hook 2: Socket listener (no changes needed) ---
   useEffect(() => {
     if (!socket) {
-      console.log('No socket available for navigation listener');
-      return;
+      console.log("No socket available for navigation listener");
+      return; // Early return inside a hook's callback is OK
     }
 
     const handleNavigateToPage = (data) => {
-      console.log(`🎯 Received navigation request: ${data.path} (scanned by: ${data.scannedBy})`);
+      console.log(
+        `🎯 Received navigation request: ${data.path} (scanned by: ${data.scannedBy})`
+      );
       navigate(data.path);
     };
 
-    console.log('🔌 Setting up navigate_to_page listener');
-    socket.on('navigate_to_page', handleNavigateToPage);
+    console.log("🔌 Setting up navigate_to_page listener");
+    socket.on("navigate_to_page", handleNavigateToPage);
 
     return () => {
-      console.log('🧹 Cleaning up navigate_to_page listener');
-      socket.off('navigate_to_page', handleNavigateToPage);
+      console.log("🧹 Cleaning up navigate_to_page listener");
+      socket.off("navigate_to_page", handleNavigateToPage);
     };
   }, [socket, navigate]);
 
+  // --- Conditional return ---
+  // If there are no session details, show a loading screen while the redirect happens.
+  if (!sessionDetails) {
+    return <div>Loading Game...</div>;
+  }
+
+  // --- Main component render ---
   return (
     <div className="character-selection-container">
       {/* Gameplay Banner Section */}
       <div className="gameplay-banner">
-        <img src="/images/banners/game-dashboard-banner.jpg" alt="Gameplay Banner" />
+        <img
+          src="/images/banners/game-dashboard-banner.jpg"
+          alt="Gameplay Banner"
+        />
       </div>
 
       {/* Top section */}
@@ -72,7 +85,7 @@ export function Gameplay() {
 
       {/* Bottom section */}
       <div className="bottom-content">
-        <button onClick={() => navigate('/scanner')}>Scan QR</button>
+        <button onClick={() => navigate("/scanner")}>Scan QR</button>
       </div>
     </div>
   );

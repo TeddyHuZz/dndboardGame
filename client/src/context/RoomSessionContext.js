@@ -1,10 +1,55 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-const RoomSessionContext = createContext(null);
+const RoomSessionContext = createContext();
+
+export const useRoomSession = () => useContext(RoomSessionContext);
+
+// Helper function to get initial state from sessionStorage
+const getInitialState = (key, defaultValue) => {
+  try {
+    const item = window.sessionStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.error(`Error reading sessionStorage key “${key}”:`, error);
+    return defaultValue;
+  }
+};
 
 export const RoomSessionProvider = ({ children }) => {
-  const [sessionDetails, setSessionDetails] = useState(null);
-  const [players, setPlayers] = useState([]);
+  const [sessionDetails, setSessionDetailsState] = useState(() =>
+    getInitialState("sessionDetails", null)
+  );
+  const [players, setPlayersState] = useState(() =>
+    getInitialState("players", [])
+  );
+
+  // Wrapper for setSessionDetails to also update sessionStorage
+  const setSessionDetails = (data) => {
+    setSessionDetailsState(data);
+    try {
+      if (data) {
+        window.sessionStorage.setItem("sessionDetails", JSON.stringify(data));
+      } else {
+        window.sessionStorage.removeItem("sessionDetails");
+      }
+    } catch (error) {
+      console.error("Error setting sessionDetails in sessionStorage:", error);
+    }
+  };
+
+  // Wrapper for setPlayers to also update sessionStorage
+  const setPlayers = (data) => {
+    setPlayersState(data);
+    try {
+      if (data) {
+        window.sessionStorage.setItem("players", JSON.stringify(data));
+      } else {
+        window.sessionStorage.removeItem("players");
+      }
+    } catch (error) {
+      console.error("Error setting players in sessionStorage:", error);
+    }
+  };
 
   const value = {
     sessionDetails,
@@ -18,8 +63,4 @@ export const RoomSessionProvider = ({ children }) => {
       {children}
     </RoomSessionContext.Provider>
   );
-};
-
-export const useRoomSession = () => {
-  return useContext(RoomSessionContext);
 };

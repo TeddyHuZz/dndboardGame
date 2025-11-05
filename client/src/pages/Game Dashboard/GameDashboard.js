@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Add this import
 import "./GameDashboard.css";
 import CreateGamePopup from "../../components/Popup/CreateGamePopup";
 import JoinGamePopup from "../../components/Popup/JoinGamePopup";
@@ -11,6 +12,7 @@ export function GameDashboard() {
   const [isJoinGamePopupVisible, setIsJoinGamePopupVisible] = useState(false);
   const { setPlayers, setSessionDetails } = useRoomSession();
   const { session, profile } = useAuth();
+  const navigate = useNavigate(); // Add this
 
   const handleClosePopup = () => {
     setIsPopupVisible(false);
@@ -26,7 +28,7 @@ export function GameDashboard() {
       alert("You must be logged in to join a game.");
       return false;
     }
-    
+
     try {
       // 1. Find the room session with the given code
       const { data: roomData, error: roomError } = await supabase
@@ -37,9 +39,11 @@ export function GameDashboard() {
         .single();
 
       if (roomError || !roomData) {
-        throw new Error("Room not found or has been closed. Please check the code and try again.");
+        throw new Error(
+          "Room not found or has been closed. Please check the code and try again."
+        );
       }
-      
+
       // Prevent user from joining their own game
       if (roomData.user_id === profile.user_id) {
         throw new Error("You can't join your own game.");
@@ -70,18 +74,20 @@ export function GameDashboard() {
       // 4. Fetch all players in the room (with their user info)
       const { data: playersData, error: playersError } = await supabase
         .from("room_players")
-        .select(`
+        .select(
+          `
           user_id,
           user:user_id (username, user_id)
-        `)
+        `
+        )
         .eq("session_id", roomData.session_id);
 
       if (playersError) throw playersError;
 
       // Transform the data to match expected format
-      const playersList = playersData.map(p => ({
+      const playersList = playersData.map((p) => ({
         user_id: p.user.user_id,
-        username: p.user.username
+        username: p.user.username,
       }));
 
       // 5. Update context state
@@ -90,9 +96,8 @@ export function GameDashboard() {
 
       // 6. Show the lobby view
       setIsJoinGamePopupVisible(false);
-      setIsPopupVisible(true); 
+      setIsPopupVisible(true);
       return true;
-
     } catch (error) {
       console.error("Error joining room:", error);
       alert(error.message);
@@ -104,7 +109,9 @@ export function GameDashboard() {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "";
     for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
+      result += characters.charAt(
+        Math.floor(Math.random() * characters.length)
+      );
     }
     return result;
   };
@@ -124,7 +131,7 @@ export function GameDashboard() {
         .insert({
           session_code: sessionCode,
           user_id: session.user.id,
-          session_status: "Waiting"
+          session_status: "Waiting",
         })
         .select()
         .single();
@@ -146,18 +153,26 @@ export function GameDashboard() {
       setPlayers([profile]);
       setIsPopupVisible(true);
       setIsJoinGamePopupVisible(false);
-
     } catch (error) {
       console.error("Error creating room session:", error);
-      alert("Failed to create a new game room. Please check the console for errors.");
+      alert(
+        "Failed to create a new game room. Please check the console for errors."
+      );
     }
+  };
+
+  const handleLoadSavedGame = () => {
+    navigate("/load-game");
   };
 
   return (
     <div className="game-dashboard-container">
       {/* Game Dashboard Banner Section */}
       <div className="game-dashboard-banner">
-        <img src="/images/banners/game-dashboard-banner.jpg" alt="Game Dashboard Banner" />
+        <img
+          src="/images/banners/game-dashboard-banner.jpg"
+          alt="Game Dashboard Banner"
+        />
       </div>
 
       {/* Game Dashboard Menu Section */}
@@ -165,23 +180,15 @@ export function GameDashboard() {
         <h1>Realm Quest</h1>
         <ul>
           <li onClick={handleCreateGame}>Create Game</li>
-          <li>Load Saved Game</li>
+          <li onClick={handleLoadSavedGame}>Load Saved Game</li>
           <li onClick={handleJoinGameClick}>Join Game</li>
-          <li>Browse Game</li>
         </ul>
       </div>
 
-      {isPopupVisible && (
-        <CreateGamePopup
-          onClose={handleClosePopup}
-        />
-      )}
+      {isPopupVisible && <CreateGamePopup onClose={handleClosePopup} />}
 
       {isJoinGamePopupVisible && (
-        <JoinGamePopup
-          onClose={handleClosePopup}
-          onJoin={handleJoinRoom}
-        />
+        <JoinGamePopup onClose={handleClosePopup} onJoin={handleJoinRoom} />
       )}
     </div>
   );
