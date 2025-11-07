@@ -2,47 +2,47 @@ import { supabase } from "../../supabaseClient";
 import { useState, useEffect } from "react";
 import { useRoomSession } from "../../context/RoomSessionContext";
 import { useAuth } from "../../context/AuthContext";
-import { useSocket } from "../../context/SocketContext";  // ✅ Use SocketContext
+import { useSocket } from "../../context/SocketContext";
 import { useNavigate } from "react-router-dom";
 import "./CharacterSelection.css";
 
 export function CharacterSelection() {
   const { sessionDetails } = useRoomSession();
   const { profile } = useAuth();
-  const { socket } = useSocket();  // ✅ Get socket from context
+  const { socket } = useSocket();
   const navigate = useNavigate();
   const [playerSelections, setPlayerSelections] = useState({});
-   
+
   const WarriorID = "51d95f67-01c0-42e8-aed7-85435742af4d";
   const HealerID = "23a98afc-1a3d-47ed-a991-31229a0650c3";
-  const MageID = "35169b3e-b282-483a-a39e-5e9162794aa8"
+  const MageID = "35169b3e-b282-483a-a39e-5e9162794aa8";
   const [characterWarrior, setCharacterWarrior] = useState(null);
   const [characterHealer, setCharacterHealer] = useState(null);
   const [characterMage, setCharacterMage] = useState(null);
 
-  // ✅ Setup socket listeners (but don't create socket)
+  // Setup socket listeners (but don't create socket)
   useEffect(() => {
     if (!socket) return;
 
     // Listener for selection updates from the server
     const handleSelectionUpdate = (selections) => {
-      console.log('Received selection update: ', selections);
+      console.log("Received selection update: ", selections);
       setPlayerSelections(selections);
     };
 
     // Listener to start the game
     const handleStartGame = () => {
-      console.log('ALL players are ready! Starting the game...');
-      navigate('/gameplay');
+      console.log("ALL players are ready! Starting the game...");
+      navigate("/gameplay");
     };
 
-    socket.on('selection_update', handleSelectionUpdate);
-    socket.on('start_game', handleStartGame);
+    socket.on("selection_update", handleSelectionUpdate);
+    socket.on("start_game", handleStartGame);
 
     // Cleanup listeners
     return () => {
-      socket.off('selection_update', handleSelectionUpdate);
-      socket.off('start_game', handleStartGame);
+      socket.off("selection_update", handleSelectionUpdate);
+      socket.off("start_game", handleStartGame);
     };
   }, [socket, navigate]);
 
@@ -50,7 +50,9 @@ export function CharacterSelection() {
     const fetchCharacterWarrior = async () => {
       const { data, error } = await supabase
         .from("character_classes")
-        .select("character_id, character_name, character_description, character_image")
+        .select(
+          "character_id, character_name, character_description, character_image"
+        )
         .eq("character_id", WarriorID)
         .single();
 
@@ -68,7 +70,9 @@ export function CharacterSelection() {
     const fetchCharacterHealer = async () => {
       const { data, error } = await supabase
         .from("character_classes")
-        .select("character_id, character_name, character_description, character_image")
+        .select(
+          "character_id, character_name, character_description, character_image"
+        )
         .eq("character_id", HealerID)
         .single();
 
@@ -86,7 +90,9 @@ export function CharacterSelection() {
     const fetchCharacterMage = async () => {
       const { data, error } = await supabase
         .from("character_classes")
-        .select("character_id, character_name, character_description, character_image")
+        .select(
+          "character_id, character_name, character_description, character_image"
+        )
         .eq("character_id", MageID)
         .single();
 
@@ -101,14 +107,21 @@ export function CharacterSelection() {
   }, [MageID]);
 
   const handleSelectCharacter = async (characterId) => {
-    console.log("Attempting to select character. Socket ready?", !!socket, "Session ready?", !!sessionDetails?.session_id, "Profile ready?", !!profile?.user_id);
+    console.log(
+      "Attempting to select character. Socket ready?",
+      !!socket,
+      "Session ready?",
+      !!sessionDetails?.session_id,
+      "Profile ready?",
+      !!profile?.user_id
+    );
 
     if (socket && sessionDetails?.session_id && profile?.user_id) {
       // Send selection to the server
-      socket.emit('character_selected', {
+      socket.emit("character_selected", {
         sessionId: sessionDetails.session_id,
         characterId: characterId,
-        userId: profile.user_id
+        userId: profile.user_id,
       });
     }
 
@@ -126,11 +139,11 @@ export function CharacterSelection() {
 
     const { data: updateData, error: updateError } = await supabase
       .from("room_players")
-      .update({ 
+      .update({
         character_id: characterId,
         current_hp: baseHp,
-        max_hp: baseHp
-       })
+        max_hp: baseHp,
+      })
       .eq("session_id", sessionDetails.session_id)
       .eq("user_id", profile.user_id);
 
@@ -145,39 +158,66 @@ export function CharacterSelection() {
     <div className="character-selection-container">
       {/* Character Selection Banner Section */}
       <div className="character-selection-banner">
-        <img src="/images/banners/game-dashboard-banner.jpg" alt="Character Selection Banner" />
+        <img
+          src="/images/banners/game-dashboard-banner.jpg"
+          alt="Character Selection Banner"
+        />
       </div>
-      
+
       <div className="character-selection-content">
         <div className="character-selection-top-menu">
           <h1>Character Selection</h1>
         </div>
 
         <div className="character-selection-middle-content">
-            {characterWarrior && (
-              <div className="character-selection-middle-content-left">
-                <h3>{ characterWarrior.character_name }</h3>
-                <img src={characterWarrior.character_image} alt="Character Warrior" />
-                <p>{ characterWarrior.character_description }</p>
-                <button onClick={() => handleSelectCharacter(characterWarrior.character_id)}>Select Warrior</button>
-              </div>
-            )}
-            {characterHealer && (
-              <div className="character-selection-middle-content-middle">
-                <h3>{ characterHealer.character_name }</h3>
-                <img src={characterHealer.character_image} alt="Character Healer" />
-                <p>{ characterHealer.character_description }</p>
-                <button onClick={() => handleSelectCharacter(characterHealer.character_id)}>Select Healer</button>
-              </div>
-            )}
-            {characterMage && (
-              <div className="character-selection-middle-content-right">
-                <h3>{ characterMage.character_name }</h3>
-                <img src={characterMage.character_image} alt="Character Mage" />
-                <p>{ characterMage.character_description }</p>
-                <button onClick={() => handleSelectCharacter(characterMage.character_id)}>Select Mage</button>
-              </div>
-            )}
+          {characterWarrior && (
+            <div className="character-card">
+              <h3>{characterWarrior.character_name}</h3>
+              <img
+                src={characterWarrior.character_image}
+                alt="Character Warrior"
+              />
+              <p>{characterWarrior.character_description}</p>
+              <button
+                onClick={() =>
+                  handleSelectCharacter(characterWarrior.character_id)
+                }
+              >
+                Select Warrior
+              </button>
+            </div>
+          )}
+          {characterHealer && (
+            <div className="character-card">
+              <h3>{characterHealer.character_name}</h3>
+              <img
+                src={characterHealer.character_image}
+                alt="Character Healer"
+              />
+              <p>{characterHealer.character_description}</p>
+              <button
+                onClick={() =>
+                  handleSelectCharacter(characterHealer.character_id)
+                }
+              >
+                Select Healer
+              </button>
+            </div>
+          )}
+          {characterMage && (
+            <div className="character-card">
+              <h3>{characterMage.character_name}</h3>
+              <img src={characterMage.character_image} alt="Character Mage" />
+              <p>{characterMage.character_description}</p>
+              <button
+                onClick={() =>
+                  handleSelectCharacter(characterMage.character_id)
+                }
+              >
+                Select Mage
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

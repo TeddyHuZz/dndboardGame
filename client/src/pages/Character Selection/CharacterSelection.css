@@ -1,117 +1,142 @@
 .character-selection-container {
-    position: relative;
-    height: 100vh;
-    width: 100%;
-    overflow-y: hidden;
-    overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  padding-bottom: 4rem;
+  box-sizing: border-box;
 }
-  
+
 .character-selection-banner {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1; 
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
 }
-  
+
 .character-selection-banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    filter: brightness(0.2);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.2);
 }
 
 .character-selection-content {
-    color: white;
-    padding: 20px;
+  color: white;
+  padding: 0 1rem;
 }
 
 .character-selection-top-menu {
-    text-align: center;
-    margin-top: 8rem;
-    margin-bottom: 2rem;
+  text-align: center;
+  padding-top: 6rem;
+  margin-bottom: 2rem;
 }
 
 .character-selection-top-menu h1 {
-    font-size: 2.5em;
-    color: #f0e6d2;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+  font-size: 2rem;
+  color: #f0e6d2;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
 /* This is the main container for the character cards */
 .character-selection-middle-content {
-    display: flex;
-    justify-content: space-around; /* This will space out the cards evenly */
-    align-items: stretch; /* Make cards the same height */
-    padding: 0 20px;
-    gap: 30px; /* Adds space between the cards */
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  width: 100%;
 }
 
 /* Common styles for all character cards */
-.character-selection-middle-content-left,
-.character-selection-middle-content-middle,
-.character-selection-middle-content-right {
-    background-color: rgba(20, 20, 20, 0.7); /* Slightly darker background */
-    border-radius: 10px;
-    border: 1px solid #444;
-    padding: 20px;
-    width: 28%; /* Each card takes up roughly a third of the space */
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+.character-card {
+  background-color: rgba(20, 20, 20, 0.7);
+  border-radius: 10px;
+  border: 1px solid #444;
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 /* Common styles for elements inside the cards */
-.character-selection-middle-content-left h3,
-.character-selection-middle-content-middle h3,
-.character-selection-middle-content-right h3 {
-    margin-top: 0;
+.character-card h3 {
+  margin-top: 0;
+  font-size: 1.5em;
+  color: #f0e6d2;
+  margin-bottom: 15px;
+}
+
+.character-card img {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+  margin: 0 auto 15px auto;
+}
+
+.character-card p {
+  font-size: 1em;
+  color: #ccc;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+.character-card button {
+  background-color: #d98b09;
+  color: #111;
+  font-weight: bold;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.character-card button:hover {
+  background-color: #b8780a;
+}
+
+@media (min-width: 1024px) {
+  .character-selection-container {
+    height: 100vh;
+    overflow-y: hidden;
+    padding-bottom: 0;
+  }
+
+  .character-selection-top-menu {
+    padding-top: 8rem;
+  }
+
+  .character-selection-top-menu h1 {
+    font-size: 2.5em;
+  }
+
+  .character-selection-middle-content {
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    padding: 0 20px;
+  }
+
+  .character-card {
+    width: 28%;
+    max-width: 420px;
+  }
+
+  .character-card h3 {
     font-size: 1.8em;
-    color: #f0e6d2;
-    margin-bottom: 15px;
-}
+  }
 
-.character-selection-middle-content-left img,
-.character-selection-middle-content-middle img,
-.character-selection-middle-content-right img {
-    width: 100%;
-    max-width: 350px; /* Control image size */
-    height: auto;
-    margin: 0 auto 15px auto;
-}
-
-.character-selection-middle-content-left p,
-.character-selection-middle-content-middle p,
-.character-selection-middle-content-right p {
-    font-size: 1em;
-    color: #ccc;
-    line-height: 1.5;
-    margin-bottom: 20px;
-    flex-grow: 1; 
-}
-
-.character-selection-middle-content-left button,
-.character-selection-middle-content-middle button,
-.character-selection-middle-content-right button {
-    background-color: #D98B09;
-    color: #111;
-    font-weight: bold;
-    padding: 12px 24px;
-    border-radius: 8px;
-    border: none;
-    text-decoration: none;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.character-selection-middle-content-left button:hover,
-.character-selection-middle-content-middle button:hover,
-.character-selection-middle-content-right button:hover {
-    background-color: #b8780a;
+  .character-card img {
+    max-width: 350px;
+  }
 }

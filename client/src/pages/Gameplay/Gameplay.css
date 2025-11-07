@@ -1,53 +1,53 @@
 .gameplay-banner img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -10; 
-    filter: brightness(0.2);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -10;
+  filter: brightness(0.2);
 }
 
 .top-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .top-left {
-    margin-top: 3rem;
-    margin-left: 3rem;
+  margin-top: 3rem;
+  margin-left: 3rem;
 }
 
 .top-right {
-    margin-top: 5rem;
-    margin-right: 4rem;
+  margin-top: 5rem;
+  margin-right: 4rem;
 }
 
 .side-content {
-    margin-top: 5rem;
-    margin-left: 2px;
+  margin-top: 5rem;
+  margin-left: 2px;
 }
 
 .bottom-content {
-    align-items: center;
-    justify-content: center;
-    display: flex;
-    margin-top: 4rem;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  margin-top: 4rem;
 }
 
 .bottom-content button {
-    background-color: #D98B09;
-    color: rgb(0, 0, 0);
-    padding: 1.2rem 2.5rem;
-    border-radius: 10px;
-    border: none;
-    text-decoration: none;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    cursor: pointer;
-    font-weight: 600;
-  }
-  .bottom-content button:hover {
-    background-color: #865e17;
-  }
+  background-color: #d98b09;
+  color: rgb(0, 0, 0);
+  padding: 1.2rem 2.5rem;
+  border-radius: 10px;
+  border: none;
+  text-decoration: none;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+  font-weight: 600;
+}
+.bottom-content button:hover {
+  background-color: #865e17;
+}

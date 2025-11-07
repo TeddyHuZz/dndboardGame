@@ -83,7 +83,7 @@ export function Gameplay() {
 
   // --- Main component render ---
   return (
-    <div className="character-selection-container">
+    <div className="gameplay-container">
       {/* Gameplay Banner Section */}
       <div className="gameplay-banner">
         <img

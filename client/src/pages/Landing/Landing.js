@@ -1,14 +1,14 @@
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Landing.css";
-
 
 const banners = [
   {
     id: 1,
     title: "Forge Your Legend",
     subtitle: "Roll the Dice, Shape Your Destiny",
-    description: "Embark on legendary quests in a world of magic, monsters, and mystery. Gather your party, vanquish fearsome foes, and write your own saga. Your adventure starts here.",
+    description:
+      "Embark on legendary quests in a world of magic, monsters, and mystery. Gather your party, vanquish fearsome foes, and write your own saga. Your adventure starts here.",
     image: "/images/banners/fantasy-dragon.jpg",
     cta: "Start Your Adventure",
     path: "/game-dashboard",
@@ -53,18 +53,18 @@ const banners = [
     cta: "Send a Missive",
     path: "/contact",
   },
-]
+];
 
 export function Landing() {
-  const [currentBanner, setCurrentBanner] = useState(0)
-  const [scrollProgress, setScrollProgress] = useState(0)
+  const [currentBanner, setCurrentBanner] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     let ticking = false;
     let rafId = null;
     let isTabVisible = true;
-  
+
     const handleVisibilityChange = () => {
       isTabVisible = !document.hidden;
       if (document.hidden && rafId) {
@@ -74,43 +74,47 @@ export function Landing() {
         ticking = false;
       }
     };
-  
+
     const handleScroll = () => {
       // Don't process scroll if tab is hidden
       if (!isTabVisible) return;
-  
+
       if (!ticking) {
         rafId = window.requestAnimationFrame(() => {
           const scrollPosition = window.scrollY;
           const windowHeight = window.innerHeight;
-          const documentHeight = document.documentElement.scrollHeight - windowHeight;
-  
+          const documentHeight =
+            document.documentElement.scrollHeight - windowHeight;
+
           // Calculate scroll progress (0 to 1)
           const progress = Math.min(scrollPosition / documentHeight, 1);
           setScrollProgress(progress);
-  
+
           // Determine which banner to show based on scroll position
-          const bannerIndex = Math.min(Math.floor(progress * banners.length), banners.length - 1);
+          const bannerIndex = Math.min(
+            Math.floor(progress * banners.length),
+            banners.length - 1
+          );
           setCurrentBanner(bannerIndex);
-  
+
           ticking = false;
           rafId = null;
         });
         ticking = true;
       }
     };
-  
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("scroll", handleScroll, { passive: true });
-    
+
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("scroll", handleScroll);
       if (rafId) {
         window.cancelAnimationFrame(rafId);
       }
     };
-  }, [])
+  }, []);
 
   // Memoize banner to prevent unnecessary recalculations
   const banner = useMemo(() => banners[currentBanner], [currentBanner]);
@@ -122,9 +126,9 @@ export function Landing() {
         {/* Background Image with Parallax - ONLY RENDER CURRENT BANNER */}
         <div className="banner-background-wrapper">
           <div className="banner-background" style={{ opacity: 1 }}>
-            <img 
-              src={banner.image || "/placeholder.svg"} 
-              alt={banner.title} 
+            <img
+              src={banner.image || "/placeholder.svg"}
+              alt={banner.title}
               className="banner-image"
               key={banner.id} // Force re-render on change
             />
@@ -135,7 +139,10 @@ export function Landing() {
         {/* Content */}
         <div className="banner-content-wrapper">
           <div className="banner-content">
-            <div key={`subtitle-${banner.id}`} className="content-subtitle-wrapper">
+            <div
+              key={`subtitle-${banner.id}`}
+              className="content-subtitle-wrapper"
+            >
               <p className="content-subtitle">{banner.subtitle}</p>
             </div>
 
@@ -143,27 +150,22 @@ export function Landing() {
               <h2 className="content-title">{banner.title}</h2>
             </div>
 
-            <div key={`description-${banner.id}`} className="content-description-wrapper">
-              <p className="content-description">
-                {banner.description}
-              </p>
+            <div
+              key={`description-${banner.id}`}
+              className="content-description-wrapper"
+            >
+              <p className="content-description">{banner.description}</p>
             </div>
 
             <div key={`cta-${banner.id}`} className="content-cta-wrapper">
-              <button className="content-cta-button" onClick={() => navigate(banner.path)}>
+              <button
+                className="content-cta-button"
+                onClick={() => navigate(banner.path)}
+              >
                 {banner.cta}
               </button>
             </div>
           </div>
-
-          {/* Scroll Indicator */}
-          {currentBanner === 0 && (
-            <div className="scroll-indicator">
-              <div className="scroll-indicator-content">
-                <span className="scroll-indicator-text">Scroll to explore</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Progress Indicators */}
@@ -173,10 +175,13 @@ export function Landing() {
               key={index}
               onClick={() => {
                 const targetScroll =
-                  (index / banners.length) * (document.documentElement.scrollHeight - window.innerHeight)
-                window.scrollTo({ top: targetScroll, behavior: "smooth" })
+                  (index / banners.length) *
+                  (document.documentElement.scrollHeight - window.innerHeight);
+                window.scrollTo({ top: targetScroll, behavior: "smooth" });
               }}
-              className={`progress-dot ${currentBanner === index ? "active" : ""}`}
+              className={`progress-dot ${
+                currentBanner === index ? "active" : ""
+              }`}
               aria-label={`Go to banner ${index + 1}`}
             />
           ))}
@@ -184,9 +189,12 @@ export function Landing() {
       </section>
 
       {/* Spacer to enable scrolling */}
-      <div className="scroll-spacer" style={{ height: `${banners.length * 100}vh` }} />
+      <div
+        className="scroll-spacer"
+        style={{ height: `${banners.length * 100}vh` }}
+      />
     </div>
-  )
+  );
 }
 
 export default Landing;
