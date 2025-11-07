@@ -3,13 +3,16 @@ import {
   Routes,
   Route,
   useLocation,
-  Navigate,
   Outlet,
+  useNavigate, // Import useNavigate
 } from "react-router-dom";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "../../context/AuthContext";
 import { RoomSessionProvider } from "../../context/RoomSessionContext";
-import { SocketProvider } from "../../context/SocketContext";
+import { SocketProvider, useSocket } from "../../context/SocketContext";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Navigate } from "react-router-dom";
 
 // Layouts
 import MainLayout from "../../layouts/MainLayout";
@@ -27,17 +30,43 @@ import CombatRoom from "../Combat/CombatRoom";
 import TreasureRoom from "../Treasure Room/TreasureRoom";
 import LoadGame from "../../components/GameFile/LoadGame";
 
+const SocketNavigator = () => {
+  const { socket } = useSocket();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNavigate = (data) => {
+      console.log("Received navigation event:", data.path);
+      navigate(data.path);
+    };
+
+    const handleShowNotification = (data) => {
+      console.log("Received notification event:", data.message);
+      toast.info(data.message);
+    };
+
+    socket.on("navigate_to_page", handleNavigate);
+    socket.on("show_notification", handleShowNotification);
+
+    return () => {
+      socket.off("navigate_to_page", handleNavigate);
+      socket.off("show_notification", handleShowNotification);
+    };
+  }, [socket, navigate]);
+
+  return null;
+};
+
 const LocationHandler = () => {
   const location = useLocation();
 
   useEffect(() => {
     if (location.state?.message) {
-      // Use setTimeout to avoid blocking the render
       setTimeout(() => {
         alert(location.state.message);
       }, 100);
-
-      // Clear the message immediately to prevent re-showing
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -50,6 +79,8 @@ const PrivateRoutes = () => {
   return session ? (
     <RoomSessionProvider>
       <SocketProvider>
+        {/* FIX: SocketNavigator must be inside the SocketProvider to get context */}
+        <SocketNavigator />
         <Outlet />
       </SocketProvider>
     </RoomSessionProvider>
@@ -60,13 +91,25 @@ const PrivateRoutes = () => {
 
 const PublicRoutes = () => {
   const { session } = useAuth();
-  return !session ? <Outlet /> : <Navigate to="/" replace />;
+  return !session ? <Outlet /> : <Navigate to="/game-dashboard" replace />;
 };
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        {/* FIX: ToastContainer must be rendered to be visible */}
+        <ToastContainer
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         <LocationHandler />
         <Routes>
           {/* --- Publicly accessible routes --- */}
@@ -75,7 +118,6 @@ function App() {
           </Route>
 
           {/* --- Routes for logged-in users --- */}
-          {/* This structure is now correct. The provider is inside the element. */}
           <Route element={<PrivateRoutes />}>
             <Route element={<MainLayout />}>
               <Route path="/game-dashboard" element={<GameDashboard />} />
@@ -91,7 +133,7 @@ function App() {
             <Route>
               <Route path="/gameplay" element={<Gameplay />} />
               <Route path="/scanner" element={<ScannerPage />} />
-              <Route path="/combat/:enemySlug" element={<CombatRoom />} />
+              <Route path="/combat/:encounterId" element={<CombatRoom />} />
               <Route path="/treasure/:encounterId" element={<TreasureRoom />} />
             </Route>
           </Route>

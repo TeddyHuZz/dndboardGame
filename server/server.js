@@ -110,65 +110,114 @@ io.on("connection", (socket) => {
     }
   );
 
-  // Add this new socket event handler in server.js
-  socket.on("qr_code_scanned", ({ sessionId, path, scannedBy }) => {
-    console.log(
-      `QR code scanned by ${scannedBy} in session ${sessionId}, navigating all players to ${path}`
-    );
+  socket.on("qr_code_scanned", async (data) => {
+    const { sessionId, path } = data;
+    const enemySlug = path.split("/").filter(Boolean).pop();
 
-    // Broadcast to ALL players in the session
-    io.to(sessionId).emit("navigate_to_page", {
-      path: path,
-      scannedBy: scannedBy,
-    });
+    try {
+      const { data: existingEncounter, error: encounterError } = await supabase
+        .from("room_encounters")
+        .select("encounter_id, is_alive")
+        .eq("session_id", sessionId)
+        .eq("enemy_slug", enemySlug)
+        .single();
+
+      if (existingEncounter) {
+        if (!existingEncounter.is_alive) {
+          console.log(
+            `Encounter with slug ${enemySlug} is defeated. Notifying user.`
+          );
+          socket.emit("show_notification", {
+            message: "This enemy has already been defeated!",
+          });
+        } else {
+          console.log(
+            `Encounter with slug ${enemySlug} is alive. Navigating to existing encounter.`
+          );
+          socket.emit("navigate_to_page", {
+            path: `/combat/${existingEncounter.encounter_id}`,
+          });
+        }
+      } else {
+        console.log(
+          `No encounter found for slug ${enemySlug}. Creating new encounter.`
+        );
+
+        // --- ADD THIS LOG ---
+        console.log(
+          `[DEBUG] Querying enemy_data for enemy_slug: '${enemySlug}'`
+        );
+
+        const { data: enemyData, error: enemyDataError } = await supabase
+          .from("enemy_data")
+          .select("enemy_id, base_hp")
+          .eq("enemy_slug", enemySlug)
+          .single();
+
+        if (enemyDataError || !enemyData) {
+          console.error(
+            `[ERROR] Supabase query failed for slug '${enemySlug}'. Error:`,
+            enemyDataError
+          );
+          return socket.emit("show_notification", {
+            message: `Enemy '${enemySlug}' not found.`,
+          });
+        }
+
+        const { data: newEncounter, error: insertError } = await supabase
+          .from("room_encounters")
+          .insert({
+            session_id: sessionId,
+            enemy_id: enemyData.enemy_id,
+            max_hp: enemyData.base_hp,
+            current_hp: enemyData.base_hp,
+            is_alive: true,
+            enemy_slug: enemySlug,
+          })
+          .select("encounter_id")
+          .single();
+
+        if (insertError) {
+          console.error("Error creating new encounter:", insertError);
+          return socket.emit("show_notification", {
+            message: "Failed to create encounter.",
+          });
+        }
+
+        console.log(
+          `New encounter created with ID: ${newEncounter.encounter_id}. Navigating user.`
+        );
+        socket.emit("navigate_to_page", {
+          path: `/combat/${newEncounter.encounter_id}`,
+        });
+      }
+    } catch (error) {
+      if (error.code !== "PGRST116") {
+        // Ignore "single row not found" errors
+        console.error("Error in qr_code_scanned handler:", error);
+      }
+    }
   });
 
   socket.on("update_enemy_hp", async (data) => {
     const { encounterId, newHp } = data;
+    console.log(
+      `[Server] Enemy HP update: Encounter ${encounterId} -> ${newHp} HP`
+    );
 
-    try {
-      // First, get the encounter to find the session_id
-      const { data: encounterData, error: fetchError } = await supabase
-        .from("room_encounters")
-        .select("session_id, max_hp")
-        .eq("encounter_id", encounterId)
-        .single();
+    // Get the session ID for this encounter
+    const { data: encounterData } = await supabase
+      .from("room_encounters")
+      .select("session_id")
+      .eq("encounter_id", encounterId)
+      .single();
 
-      if (fetchError || !encounterData) {
-        console.error(`Error fetching encounter ${encounterId}:`, fetchError);
-        return;
-      }
-
-      // Then update the HP
-      const { error: updateError } = await supabase
-        .from("room_encounters")
-        .update({
-          current_hp: newHp,
-          is_alive: newHp > 0,
-        })
-        .eq("encounter_id", encounterId);
-
-      if (updateError) {
-        console.error(
-          `Error updating enemy HP for encounter ${encounterId}:`,
-          updateError
-        );
-        return;
-      }
-
-      console.log(
-        `Updated encounter ${encounterId} HP to ${newHp} for session ${encounterData.session_id}`
-      );
-
-      // Emit to all players in the session
-      io.to(encounterData.session_id.toString()).emit("enemy_hp_update", {
-        encounter_id: encounterId,
-        current_hp: newHp,
-        max_hp: encounterData.max_hp,
-        is_alive: newHp > 0,
+    if (encounterData) {
+      // Broadcast to all clients in this session
+      io.to(`room_${encounterData.session_id}`).emit("enemy_hp_update", {
+        encounterId,
+        newHp,
       });
-    } catch (err) {
-      console.error("Error in update_enemy_hp handler:", err);
     }
   });
 

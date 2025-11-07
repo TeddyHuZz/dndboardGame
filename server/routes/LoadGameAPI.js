@@ -4,6 +4,20 @@ export const loadGamesByUser = async (req, res) => {
   const { userId } = req.params;
 
   try {
+    // First, get the session IDs for the user from the room_players table
+    const { data: playerSessions, error: playerError } = await supabase
+      .from("room_players")
+      .select("session_id")
+      .eq("user_id", userId);
+
+    if (playerError) throw playerError;
+    if (!playerSessions || playerSessions.length === 0) {
+      return res.json({ success: true, games: [] }); // User is not in any sessions
+    }
+
+    const sessionIds = playerSessions.map((ps) => ps.session_id);
+
+    // Now, fetch the details for those sessions, applying the filters
     const { data, error } = await supabase
       .from("room_sessions")
       .select(
@@ -15,22 +29,21 @@ export const loadGamesByUser = async (req, res) => {
         room_players (count)
       `
       )
-      .eq("user_id", userId)
+      .in("session_id", sessionIds) // Match the sessions the user is in
+      .eq("is_game_saved", true) // --- Only show saved games
+      .eq("session_status", "In game") // --- Only show active games
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
 
     const games = data.map((game) => ({
-      session_id: game.session_id,
-      session_code: game.session_code,
-      current_stage: game.current_stage,
-      updated_at: game.updated_at,
-      player_count: game.room_players.length,
+      ...game,
+      player_count: game.room_players[0]?.count || 0, // Correctly extract count
     }));
 
     res.json({ success: true, games });
   } catch (error) {
-    console.error("Load games error:", error);
+    console.error("Error loading games by user:", error);
     res.status(500).json({ success: false, message: "Failed to load games" });
   }
 };
@@ -75,11 +88,9 @@ export const loadGameById = async (req, res) => {
     res.json({ success: true, sessionDetails: sessionData, players });
   } catch (error) {
     console.error(`Overall error in loadGameById for ${sessionId}:`, error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to load game due to a server error.",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to load game due to a server error.",
+    });
   }
 };

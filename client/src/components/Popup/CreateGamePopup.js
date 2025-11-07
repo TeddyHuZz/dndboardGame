@@ -1,47 +1,34 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react"; // Remove useCallback
 import { useRoomSession } from "../../context/RoomSessionContext";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import "./CreateGamePopup.css";
 
-function CreateGamePopup({ onClose }) {
-  const { sessionDetails, setSessionDetails, players, setPlayers } = useRoomSession();
-  const { profile, session } = useAuth();
-  const timeoutRef = useRef(null);
-  const isMountedRef = useRef(true);
+const CreateGamePopup = ({ onClose }) => {
+  const { sessionDetails, setSessionDetails, players, setPlayers } =
+    useRoomSession();
+  const { profile } = useAuth();
   const navigate = useNavigate();
 
   // Determine if current user is the host
-  const isHost = sessionDetails?.user_id === session?.user?.id;
+  const isHost = sessionDetails?.user_id === profile?.user_id;
 
   // Get the actual host from players list
-  const actualHost = players.find(p => p.user_id === sessionDetails?.user_id);
+  const actualHost = players.find((p) => p.user_id === sessionDetails?.user_id);
 
-  // Cleanup on unmount
+  // --- FIX: Use a ref to hold a stable reference to the fetch function ---
+  const fetchPlayersRef = useRef();
+
   useEffect(() => {
-    isMountedRef.current = true;
-    
-    return () => {
-      isMountedRef.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, []);
+    // This function will be updated on each render, but the ref will hold the latest version.
+    fetchPlayersRef.current = async () => {
+      if (!sessionDetails?.session_id) return;
 
-  // Fetch players from database on mount
-  useEffect(() => {
-    if (!sessionDetails?.session_id) return;
-
-    const fetchPlayers = async () => {
+      console.log("Fetching players...");
       const { data, error } = await supabase
         .from("room_players")
-        .select(`
-          user_id,
-          user:user_id (username, user_id)
-        `)
+        .select("user_id, user:user(username)")
         .eq("session_id", sessionDetails.session_id);
 
       if (error) {
@@ -49,164 +36,96 @@ function CreateGamePopup({ onClose }) {
         return;
       }
 
-      const playersList = data.map(p => ({
-        user_id: p.user.user_id,
-        username: p.user.username
-      }));
+      // --- FIX: Add a check for missing user data ---
+      // This handles cases where a player might exist in room_players
+      // but their corresponding user record is missing.
+      const playersList = data
+        .map((p) => {
+          if (p.user && p.user.username) {
+            return {
+              user_id: p.user_id,
+              username: p.user.username,
+            };
+          }
+          // Log a warning for bad data and filter this entry out
+          console.warn("Found a player with no matching user record:", p);
+          return null;
+        })
+        .filter(Boolean); // filter(Boolean) removes any null entries
 
       setPlayers(playersList);
     };
+  });
 
-    fetchPlayers();
-  }, [sessionDetails?.session_id, setPlayers]);
+  // --- Initial fetch on mount ---
+  useEffect(() => {
+    fetchPlayersRef.current();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
-  // Real-time subscription to listen for player changes
+  // --- Subscriptions Effect ---
   useEffect(() => {
     if (!sessionDetails?.session_id) return;
 
-    const playersChannel = supabase
-      .channel(`room_players:${sessionDetails.session_id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'room_players',
-          filter: `session_id=eq.${sessionDetails.session_id}`
-        },
-        async (payload) => {
-          console.log('Player joined:', payload);
-          
-          // Refetch all players when someone joins
-          const { data, error } = await supabase
-            .from("room_players")
-            .select(`
-              user_id,
-              user:user_id (username, user_id)
-            `)
-            .eq("session_id", sessionDetails.session_id);
+    const sessionId = sessionDetails.session_id;
 
-          if (!error && data) {
-            const playersList = data.map(p => ({
-              user_id: p.user.user_id,
-              username: p.user.username
-            }));
-            setPlayers(playersList);
-          }
+    const playerChannel = supabase
+      .channel(`room-players-updates-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "room_players",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          console.log("Player change detected, re-fetching players...");
+          // Call the LATEST version of the fetch function via the ref
+          fetchPlayersRef.current();
         }
       )
+      .subscribe((status, err) =>
+        console.log(`Players subscription status: ${status}`, err || "")
+      );
+
+    const roomChannel = supabase
+      .channel(`room-session-updates-${sessionId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'room_players',
-          filter: `session_id=eq.${sessionDetails.session_id}`
+          event: "UPDATE",
+          schema: "public",
+          table: "room_sessions",
+          filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
-          console.log('Player left:', payload);
-          
-          // Remove player from local state immediately
-          const deletedUserId = payload.old.user_id;
-          setPlayers(prevPlayers => 
-            prevPlayers.filter(p => p.user_id !== deletedUserId)
-          );
-        }
-      )
-      .subscribe((status) => {
-        console.log('Players subscription status:', status);
-      });
-
-    return () => {
-      supabase.removeChannel(playersChannel);
-    };
-  }, [sessionDetails?.session_id, setPlayers]);
-
-  // Polling fallback - refetch players every 2 seconds
-  useEffect(() => {
-    if (!sessionDetails?.session_id) return;
-
-    const intervalId = setInterval(async () => {
-      const { data, error } = await supabase
-        .from("room_players")
-        .select(`
-          user_id,
-          user:user_id (username, user_id)
-        `)
-        .eq("session_id", sessionDetails.session_id);
-
-      if (!error && data) {
-        const playersList = data.map(p => ({
-          user_id: p.user.user_id,
-          username: p.user.username
-        }));
-        
-        // Only update if the list actually changed
-        setPlayers(prevPlayers => {
-          const prevIds = prevPlayers.map(p => p.user_id).sort().join(',');
-          const newIds = playersList.map(p => p.user_id).sort().join(',');
-          
-          if (prevIds !== newIds) {
-            console.log('Players list updated via polling');
-            return playersList;
-          }
-          return prevPlayers;
-        });
-      }
-    }, 2000); // Poll every 2 seconds
-
-    return () => clearInterval(intervalId);
-  }, [sessionDetails?.session_id, setPlayers]);
-
-  // Real-time subscription to listen for room session changes (host transfer)
-  useEffect(() => {
-    if (!sessionDetails?.session_id) return;
-
-    const sessionChannel = supabase
-      .channel(`room_session:${sessionDetails.session_id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'room_sessions',
-          filter: `session_id=eq.${sessionDetails.session_id}`
-        },
-        (payload) => {
-          console.log('Room session updated:', payload);
-          const newStatus = payload.new.session_status;
-
-          // Update session details (including new host)
-          setSessionDetails(payload.new);
-          
-          // If room is closed, exit
-          if (newStatus === 'Closed') {
-            alert('The room has been closed.');
-            setSessionDetails(null);
-            setPlayers([]);
-            onClose();
-          }
-
-          // If game status changes to 'In game', navigate all players
-          if (newStatus === 'In game') {
-            navigate('/character-selection');
+          console.log("Room session change received:", payload.new);
+          if (payload.new.session_status === "In game") {
+            console.log("Game is starting, navigating...");
+            navigate("/character-selection");
+          } else {
+            setSessionDetails((prev) => ({ ...prev, ...payload.new }));
           }
         }
       )
-      .subscribe((status) => {
-        console.log('Room session subscription status:', status);
-      });
+      .subscribe((status, err) =>
+        console.log(`Room session subscription status: ${status}`, err || "")
+      );
 
     return () => {
-      supabase.removeChannel(sessionChannel);
+      console.log("Cleaning up subscriptions");
+      supabase.removeChannel(playerChannel);
+      supabase.removeChannel(roomChannel);
     };
-  }, [sessionDetails?.session_id, setSessionDetails, onClose, navigate]);
+    // This effect only re-runs if the session ID changes.
+  }, [sessionDetails?.session_id, navigate, setSessionDetails]);
 
   const handleCopy = () => {
     if (sessionDetails?.session_code) {
-      navigator.clipboard.writeText(sessionDetails.session_code)
+      navigator.clipboard
+        .writeText(sessionDetails.session_code)
         .then(() => alert("Session ID copied to clipboard!"))
-        .catch(err => console.error("Failed to copy text: ", err));
+        .catch((err) => console.error("Failed to copy text: ", err));
     }
   };
 
@@ -241,23 +160,23 @@ function CreateGamePopup({ onClose }) {
         if (remainingPlayers && remainingPlayers.length > 0) {
           // Transfer host to the first remaining player (earliest joiner)
           const newHostId = remainingPlayers[0].user_id;
-          
+
           await supabase
             .from("room_sessions")
-            .update({ 
-              user_id: newHostId  // Transfer host
+            .update({
+              user_id: newHostId, // Transfer host
             })
-            .eq('session_id', sessionDetails.session_id);
+            .eq("session_id", sessionDetails.session_id);
 
           console.log(`✅ Host transferred to user: ${newHostId}`);
         } else {
           // No players left, close the room
           await supabase
             .from("room_sessions")
-            .update({ session_status: 'Closed' })
-            .eq('session_id', sessionDetails.session_id);
-          
-          console.log('✅ Room closed - no players remaining');
+            .update({ session_status: "Closed" })
+            .eq("session_id", sessionDetails.session_id);
+
+          console.log("✅ Room closed - no players remaining");
         }
       }
     } catch (error) {
@@ -270,32 +189,30 @@ function CreateGamePopup({ onClose }) {
     onClose();
   };
 
+  // The handleStartGame function can now be simplified as the subscription handles navigation.
   const handleStartGame = async () => {
-    // Ensure only the host can start the game
-    if (!isHost || !sessionDetails?.session_id) {
-      console.log("Only the host can start the game.");
-      return;
-    }
-
+    if (!isHost || !sessionDetails?.session_id) return;
     try {
-      // This database update will be detected by all clients, triggering their navigation
       await supabase
         .from("room_sessions")
-        .update({ session_status: 'In game'})
+        .update({ session_status: "In game" })
         .eq("session_id", sessionDetails.session_id);
-
-      console.log("Game start signal sent successfully.");
     } catch (error) {
       console.error("Error starting game", error);
-      alert("Only the host can start the gane!");
     }
-  }
-    
+  };
+
   return (
     <div className="create-game-popup-overlay" onClick={handleExitRoom}>
-      <div className="create-game-popup-content" onClick={e => e.stopPropagation()}>
+      <div
+        className="create-game-popup-content"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="create-game-top-menu">
-          <span>Current Players: {players.length} / {sessionDetails?.max_players || 4}</span>
+          <span>
+            Current Players: {players.length} /{" "}
+            {sessionDetails?.max_players || 4}
+          </span>
           <div className="create-game-top-menu-session-id">
             <span>Session ID: {sessionDetails?.session_code}</span>
             <button onClick={handleCopy}>Copy</button>
@@ -303,12 +220,13 @@ function CreateGamePopup({ onClose }) {
         </div>
 
         <div className="create-game-middle-content">
-          <h2>{actualHost?.username || 'Unknown'}'s Room</h2>
+          <h2>{actualHost?.username || "Unknown"}'s Room</h2>
           <span>Current Users in the Room: </span>
           <ul>
             {players.map((player) => (
               <li key={player.user_id}>
-                {player.username} {player.user_id === sessionDetails?.user_id ? '(Host)' : ''}
+                {player.username}{" "}
+                {player.user_id === sessionDetails?.user_id ? "(Host)" : ""}
               </li>
             ))}
           </ul>
@@ -321,6 +239,6 @@ function CreateGamePopup({ onClose }) {
       </div>
     </div>
   );
-}
+};
 
 export default CreateGamePopup;

@@ -69,16 +69,15 @@
 }
 
 .exit-button {
-  background-color: #ffa500;
-  color: white;
+  background-color: #d98b09;
+  color: rgb(0, 0, 0);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
   border: none;
-  padding: 15px 40px;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  text-decoration: none;
+  font-size: 16px;
 }
 
 .exit-button:hover {
-  background-color: #ff8c00;
+  background-color: #865e17;
 }

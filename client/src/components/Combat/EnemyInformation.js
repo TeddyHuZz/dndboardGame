@@ -3,63 +3,22 @@ import { supabase } from "../../supabaseClient";
 import { useRoomSession } from "../../context/RoomSessionContext";
 import "./EnemyInformation.css";
 
-const EnemyInformation = ({ socket, encounterId }) => {
-  const [enemy, setEnemy] = useState(null);
-  const [loading, setLoading] = useState(true);
+// FIX: Accept encounter and enemy as props instead of fetching them
+const EnemyInformation = ({
+  socket,
+  encounter: initialEncounter,
+  enemy: enemyData,
+}) => {
+  const [enemy, setEnemy] = useState({
+    encounter_id: initialEncounter.encounter_id,
+    enemy_id: initialEncounter.enemy_id,
+    current_hp: initialEncounter.current_hp,
+    max_hp: initialEncounter.max_hp,
+    is_alive: initialEncounter.is_alive,
+    enemy_name: enemyData.enemy_name,
+    enemy_image: enemyData.enemy_image,
+  });
   const { sessionDetails } = useRoomSession();
-
-  // Fetch enemy data from room_encounters and enemy_data
-  useEffect(() => {
-    const fetchEnemyData = async () => {
-      if (!sessionDetails?.session_id) return;
-
-      try {
-        // Get encounter data with enemy details
-        const { data: encounterData, error: encounterError } = await supabase
-          .from("room_encounters")
-          .select(
-            `
-                        encounter_id,
-                        enemy_id,
-                        current_hp,
-                        max_hp,
-                        is_alive,
-                        enemy_data (
-                            enemy_name,
-                            enemy_image,
-                            base_hp
-                        )
-                    `
-          )
-          .eq("session_id", sessionDetails.session_id)
-          .eq("encounter_id", encounterId)
-          .single();
-
-        if (encounterError) {
-          console.error("Error fetching encounter:", encounterError);
-          return;
-        }
-
-        // Combine the data
-        setEnemy({
-          encounter_id: encounterData.encounter_id,
-          enemy_id: encounterData.enemy_id,
-          current_hp: encounterData.current_hp,
-          max_hp: encounterData.max_hp,
-          is_alive: encounterData.is_alive,
-          enemy_name: encounterData.enemy_data.enemy_name,
-          enemy_image: encounterData.enemy_data.enemy_image,
-        });
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchEnemyData();
-  }, [sessionDetails?.session_id, encounterId]);
 
   // Listen for real-time HP updates via socket
   useEffect(() => {
@@ -69,23 +28,21 @@ const EnemyInformation = ({ socket, encounterId }) => {
       console.log("Enemy HP update received:", updatedEnemy);
 
       // Update if it's the same encounter
-      if (updatedEnemy.encounter_id === encounterId) {
+      if (updatedEnemy.encounterId === initialEncounter.encounter_id) {
         setEnemy((prevEnemy) => ({
           ...prevEnemy,
-          current_hp: updatedEnemy.current_hp,
-          max_hp: updatedEnemy.max_hp,
-          is_alive: updatedEnemy.is_alive,
+          current_hp: updatedEnemy.newHp,
+          is_alive: updatedEnemy.newHp > 0,
         }));
       }
     };
 
     socket.on("enemy_hp_update", handleEnemyHpUpdate);
 
-    // Cleanup
     return () => {
       socket.off("enemy_hp_update", handleEnemyHpUpdate);
     };
-  }, [socket, encounterId]);
+  }, [socket, initialEncounter.encounter_id]);
 
   // Subscribe to Supabase real-time updates
   useEffect(() => {
@@ -99,7 +56,7 @@ const EnemyInformation = ({ socket, encounterId }) => {
           event: "UPDATE",
           schema: "public",
           table: "room_encounters",
-          filter: `encounter_id=eq.${encounterId}`,
+          filter: `encounter_id=eq.${initialEncounter.encounter_id}`,
         },
         (payload) => {
           console.log("Supabase real-time update:", payload);
@@ -116,7 +73,7 @@ const EnemyInformation = ({ socket, encounterId }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionDetails?.session_id, encounterId]);
+  }, [sessionDetails?.session_id, initialEncounter.encounter_id]);
 
   // Calculate health percentage for the health bar
   const getHealthPercentage = () => {
@@ -131,14 +88,6 @@ const EnemyInformation = ({ socket, encounterId }) => {
     if (percentage > 30) return "#ff9800"; // Orange
     return "#f44336"; // Red
   };
-
-  if (loading) {
-    return <div className="enemy-information">Loading enemy data...</div>;
-  }
-
-  if (!enemy) {
-    return <div className="enemy-information">No enemy found</div>;
-  }
 
   return (
     <div className="enemy-information-container">

@@ -8,30 +8,35 @@ export const saveGame = async (req, res) => {
   }
 
   try {
-    // Use a transaction to update all players
-    const updates = playerStates.map((player) =>
+    // Step 1: Update player states
+    const playerUpdates = playerStates.map((player) =>
       supabase
         .from("room_players")
-        .update({
-          current_hp: player.currentHp,
-          // Add any other fields you want to save here
-        })
+        .update({ current_hp: player.currentHp })
         .eq("player_id", player.playerId)
     );
+    const playerResults = await Promise.all(playerUpdates);
+    const playerError = playerResults.find((result) => result.error);
+    if (playerError) throw playerError.error;
 
-    const results = await Promise.all(updates);
-
-    // Check for errors in the transaction
-    const error = results.find((result) => result.error);
-    if (error) throw error.error;
-
-    // Update the session's timestamp
-    await supabase
+    // Step 2: Update the session's timestamp and saved status
+    console.log(`Updating room_session ${sessionId} to is_game_saved: true`); // Add log
+    const { error: sessionError } = await supabase
       .from("room_sessions")
-      .update({ updated_at: timestamp })
+      .update({
+        updated_at: timestamp,
+        is_game_saved: true,
+      })
       .eq("session_id", sessionId);
 
-    // **The Fix**: Fetch the newly updated player data to send back
+    // --- FIX: Explicitly check for an error on the session update ---
+    if (sessionError) {
+      console.error(`Error updating room_session ${sessionId}:`, sessionError);
+      throw new Error("Failed to update the session status.");
+    }
+    console.log(`Successfully updated room_session ${sessionId}.`); // Add success log
+
+    // Step 3: Fetch the updated player data to send back
     const { data: updatedPlayers, error: fetchError } = await supabase
       .from("room_players")
       .select("*")
@@ -42,10 +47,10 @@ export const saveGame = async (req, res) => {
     res.json({
       success: true,
       message: "Game saved successfully",
-      updatedPlayers: updatedPlayers, // Send back the current state
+      updatedPlayers: updatedPlayers,
     });
   } catch (error) {
-    console.error("Error saving game:", error);
+    console.error("Error during saveGame process:", error.message);
     res.status(500).json({ success: false, message: "Failed to save game" });
   }
 };

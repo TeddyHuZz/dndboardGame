@@ -41,7 +41,6 @@ const GameSettings = () => {
     const result = await saveGameState(gameData);
 
     if (result && result.success) {
-      // **The Fix**: Update the client state with the fresh data from the server
       setPlayers(result.updatedPlayers);
       alert("Game Saved!");
     } else {
