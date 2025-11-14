@@ -42,3 +42,40 @@
   align-items: center;
   z-index: 5;
 }
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .combat-room-information {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .combat-room-top-right {
+        display: none;
+    }
+
+    .combat-room-side-panel {
+        display: none;
+    }
+
+    .combat-room-middle {
+        position: relative;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+    }
+
+    .combat-room-bottom {
+        position: relative;
+        bottom: 0;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        left: 0;
+        right: 0;
+    }
+}

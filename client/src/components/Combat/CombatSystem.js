@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
@@ -16,12 +16,19 @@ const CombatSystem = ({ encounter }) => {
   const [error, setError] = useState("");
   const [question, setQuestion] = useState(null);
   const [combatResult, setCombatResult] = useState(null);
-  // FIX: Removed the local `encounter` state, as we now use the prop.
-  // const [encounter, setEncounter] = useState(null);
   const { sessionDetails, players, setPlayers } = useRoomSession();
   const { profile } = useAuth();
   const { socket } = useSocket();
   const navigate = useNavigate();
+
+  // Debug: Log context values on mount
+  useEffect(() => {
+    console.log("🔍 CombatSystem mounted with:");
+    console.log("  - profile:", profile);
+    console.log("  - sessionDetails:", sessionDetails);
+    console.log("  - encounter:", encounter);
+    console.log("  - socket:", socket ? "connected" : "not connected");
+  }, []);
 
   const fetchPythonQuestion = async () => {
     try {
@@ -63,10 +70,25 @@ const CombatSystem = ({ encounter }) => {
     if (encounter) {
       fetchPythonQuestion();
     }
-  }, [encounter]); // Depend on the encounter prop
+  }, [encounter]);
 
+  // Show loading if critical data is missing
   if (!question) {
     return <div>Loading Question...</div>;
+  }
+
+  if (!profile || !sessionDetails) {
+    return (
+      <div className="combat-system-container">
+        <div style={{ color: "white", padding: "2rem", textAlign: "center" }}>
+          <p>Loading player data...</p>
+          <p style={{ fontSize: "0.8rem", color: "#888" }}>
+            {!profile && "Waiting for profile..."}
+            {!sessionDetails && "Waiting for session details..."}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const runCode = async () => {
@@ -158,62 +180,119 @@ ${question.test_harness}
   };
 
   const calculatePlayerDamage = async () => {
-    if (!profile || !sessionDetails) return;
+    // Double-check at the point of execution
+    if (!profile) {
+      console.error("❌ Missing profile at calculatePlayerDamage execution");
+      setOutput("Error: Player profile not loaded. Please refresh the page.");
+      return;
+    }
+    
+    if (!sessionDetails) {
+      console.error("❌ Missing sessionDetails at calculatePlayerDamage execution");
+      setOutput("Error: Session details not loaded. Please refresh the page.");
+      return;
+    }
 
     try {
-      const { data: playerData } = await supabase
+      console.log("🎯 Starting calculatePlayerDamage...");
+      console.log("  - profile.user_id:", profile.user_id);
+      console.log("  - sessionDetails.session_id:", sessionDetails.session_id);
+      console.log("  - encounter.encounter_id:", encounter.encounter_id);
+
+      const { data: playerData, error: playerError } = await supabase
         .from("room_players")
         .select("character_id")
         .eq("session_id", sessionDetails.session_id)
         .eq("user_id", profile.user_id)
         .single();
 
-      const { data: characterData } = await supabase
+      if (playerError) {
+        console.error("Error fetching player data:", playerError);
+        setOutput("Error: Could not fetch player data.");
+        return;
+      }
+
+      console.log("Player data:", playerData);
+
+      const { data: characterData, error: characterError } = await supabase
         .from("character_classes")
         .select("base_attack")
         .eq("character_id", playerData.character_id)
         .single();
 
-      const playerDamage = characterData.base_attack;
+      if (characterError) {
+        console.error("Error fetching character data:", characterError);
+        setOutput("Error: Could not fetch character data.");
+        return;
+      }
 
-      const { data: encounterData } = await supabase
+      const playerDamage = characterData.base_attack;
+      console.log("Player damage:", playerDamage);
+
+      const { data: encounterData, error: encounterError } = await supabase
         .from("room_encounters")
         .select("current_hp")
-        // FIX: Use the encounter ID from the prop
         .eq("encounter_id", encounter.encounter_id)
         .single();
 
-      const newHp = Math.max(0, encounterData.current_hp - playerDamage);
-
-      if (newHp <= 0) {
-        await supabase
-          .from("room_encounters")
-          .update({ is_alive: false, current_hp: 0 })
-          // FIX: Use the encounter ID from the prop
-          .eq("encounter_id", encounter.encounter_id);
-        setCombatResult("victory");
+      if (encounterError) {
+        console.error("Error fetching encounter data:", encounterError);
+        setOutput("Error: Could not fetch encounter data.");
+        return;
       }
 
+      console.log("Enemy current HP:", encounterData.current_hp);
+
+      const newHp = Math.max(0, encounterData.current_hp - playerDamage);
+      console.log("Enemy new HP:", newHp);
+
+      // FIXED: Always update the current_hp in the database
+      const updateData = { current_hp: newHp };
+      if (newHp <= 0) {
+        updateData.is_alive = false;
+        setCombatResult("victory");
+        console.log("🎉 Enemy defeated!");
+      }
+
+      const { error: updateError } = await supabase
+        .from("room_encounters")
+        .update(updateData)
+        .eq("encounter_id", encounter.encounter_id);
+
+      if (updateError) {
+        console.error("Error updating enemy HP:", updateError);
+        setOutput("Error: Could not update enemy HP.");
+        return;
+      }
+
+      console.log("✅ Enemy HP updated in database");
+
+      // Emit socket event for real-time updates
       if (socket) {
-        // FIX: Use the encounter ID from the prop
+        console.log("📡 Emitting update_enemy_hp event");
         socket.emit("update_enemy_hp", {
           encounterId: encounter.encounter_id,
           newHp,
         });
+      } else {
+        console.warn("⚠️ Socket not connected, HP update may not reflect immediately");
       }
     } catch (error) {
-      console.error("Error handling correct answer:", error);
+      console.error("Error in calculatePlayerDamage:", error);
+      setOutput("Error: An unexpected error occurred.");
     }
   };
 
   const calculateEnemyDamage = async () => {
-    if (!profile || !sessionDetails) return;
+    if (!profile || !sessionDetails) {
+      console.error("Missing profile or sessionDetails in calculateEnemyDamage");
+      return;
+    }
 
     try {
       const { data: enemyData } = await supabase
         .from("room_encounters")
         .select("enemy_id")
-        // FIX: Use the encounter ID from the prop
         .eq("encounter_id", encounter.encounter_id)
         .single();
 
@@ -234,12 +313,21 @@ ${question.test_harness}
 
       const newHp = Math.max(0, playerData.current_hp - enemyDamage);
 
+      // Update local state
       setPlayers(
         players.map((p) =>
           p.user_id === profile.user_id ? { ...p, current_hp: newHp } : p
         )
       );
 
+      // Update database
+      await supabase
+        .from("room_players")
+        .update({ current_hp: newHp })
+        .eq("session_id", sessionDetails.session_id)
+        .eq("user_id", profile.user_id);
+
+      // Emit socket event
       if (socket) {
         socket.emit("update_player_hp", {
           sessionId: sessionDetails.session_id,
@@ -299,6 +387,9 @@ ${question.test_harness}
   };
 
   const onCorrectAnswer = async () => {
+    console.log("✅ Correct answer!");
+    console.log("  - profile:", profile);
+    console.log("  - sessionDetails:", sessionDetails);
     setOutput("Correct! Dealing damage to enemy...");
     await calculatePlayerDamage();
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -308,6 +399,7 @@ ${question.test_harness}
   };
 
   const onWrongAnswer = async () => {
+    console.log("❌ Wrong answer!");
     setOutput("Wrong answer! Receiving damage from enemy...");
     await calculateEnemyDamage();
     await new Promise((resolve) => setTimeout(resolve, 1500));

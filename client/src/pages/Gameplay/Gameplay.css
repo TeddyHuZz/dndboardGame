@@ -48,6 +48,47 @@
   cursor: pointer;
   font-weight: 600;
 }
+
 .bottom-content button:hover {
   background-color: #865e17;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+
+    game.container {
+        overflow: hidden;
+    }
+
+  /* Hide map on mobile */
+  .top-left {
+    display: none;
+  }
+
+  /* Hide teammates panel on mobile */
+  .side-content {
+    display: none;
+  }
+
+  /* Center and make settings smaller on mobile */
+  .top-content {
+    justify-content: right;
+  }
+
+  .middle-content {
+      display: none;
+  }
+
+  .top-right {
+    margin-top: 3rem;
+    margin-right: 0;
+    transform: scale(0.6);
+  }
+
+  /* Adjust spacing for mobile */
+    .bottom-content {
+        align-items: center;
+        justify-content: center;
+        margin-top: 24rem;
+    }
 }

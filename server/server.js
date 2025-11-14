@@ -82,6 +82,7 @@ io.on("connection", (socket) => {
         io.to(sessionId).emit("selection_update", roomState.selections);
         console.log(
           `Room ${sessionId} selections updated:`,
+
           roomState.selections
         );
 
@@ -112,90 +113,121 @@ io.on("connection", (socket) => {
 
   socket.on("qr_code_scanned", async (data) => {
     const { sessionId, path } = data;
-    const enemySlug = path.split("/").filter(Boolean).pop();
+    
+    console.log(`[QR Scan] Received path: ${path} for session: ${sessionId}`);
 
-    try {
-      const { data: existingEncounter, error: encounterError } = await supabase
-        .from("room_encounters")
-        .select("encounter_id, is_alive")
-        .eq("session_id", sessionId)
-        .eq("enemy_slug", enemySlug)
-        .single();
+    // FIXED: Determine if this is a combat or treasure encounter
+    const pathParts = path.split("/").filter(Boolean);
+    const encounterType = pathParts[0]; // "combat" or "treasure"
+    const encounterSlug = pathParts[1]; // The slug/ID
 
-      if (existingEncounter) {
-        if (!existingEncounter.is_alive) {
-          console.log(
-            `Encounter with slug ${enemySlug} is defeated. Notifying user.`
-          );
-          socket.emit("show_notification", {
-            message: "This enemy has already been defeated!",
-          });
-        } else {
-          console.log(
-            `Encounter with slug ${enemySlug} is alive. Navigating to existing encounter.`
-          );
-          socket.emit("navigate_to_page", {
-            path: `/combat/${existingEncounter.encounter_id}`,
-          });
-        }
-      } else {
-        console.log(
-          `No encounter found for slug ${enemySlug}. Creating new encounter.`
-        );
+    console.log(`[QR Scan] Type: ${encounterType}, Slug: ${encounterSlug}`);
 
-        // --- ADD THIS LOG ---
-        console.log(
-          `[DEBUG] Querying enemy_data for enemy_slug: '${enemySlug}'`
-        );
+    // Handle TREASURE encounters
+    if (encounterType === "treasure") {
+      console.log(`[QR Scan] Treasure room detected, navigating directly...`);
+      // For treasure rooms, navigate directly using the slug as encounter ID
+      socket.emit("navigate_to_page", {
+        path: `/treasure/${encounterSlug}`,
+        scannedBy: socket.id
+      });
+      return;
+    }
 
-        const { data: enemyData, error: enemyDataError } = await supabase
-          .from("enemy_data")
-          .select("enemy_id, base_hp")
+    // Handle COMBAT encounters (original logic)
+    if (encounterType === "combat") {
+      const enemySlug = encounterSlug;
+      
+      try {
+        const { data: existingEncounter, error: encounterError } = await supabase
+          .from("room_encounters")
+          .select("encounter_id, is_alive")
+          .eq("session_id", sessionId)
           .eq("enemy_slug", enemySlug)
           .single();
 
-        if (enemyDataError || !enemyData) {
-          console.error(
-            `[ERROR] Supabase query failed for slug '${enemySlug}'. Error:`,
-            enemyDataError
+        if (existingEncounter) {
+          if (!existingEncounter.is_alive) {
+            console.log(
+              `Encounter with slug ${enemySlug} is defeated. Notifying user.`
+            );
+            socket.emit("show_notification", {
+              message: "This enemy has already been defeated!",
+            });
+          } else {
+            console.log(
+              `Encounter with slug ${enemySlug} is alive. Navigating to existing encounter.`
+            );
+            socket.emit("navigate_to_page", {
+              path: `/combat/${existingEncounter.encounter_id}`,
+              scannedBy: socket.id
+            });
+          }
+        } else {
+          console.log(
+            `No encounter found for slug ${enemySlug}. Creating new encounter.`
           );
-          return socket.emit("show_notification", {
-            message: `Enemy '${enemySlug}' not found.`,
+
+          console.log(
+            `[DEBUG] Querying enemy_data for enemy_slug: '${enemySlug}'`
+          );
+
+          const { data: enemyData, error: enemyDataError } = await supabase
+            .from("enemy_data")
+            .select("enemy_id, base_hp")
+            .eq("enemy_slug", enemySlug)
+            .single();
+
+          if (enemyDataError || !enemyData) {
+            console.error(
+              `[ERROR] Supabase query failed for slug '${enemySlug}'. Error:`,
+              enemyDataError
+            );
+            return socket.emit("show_notification", {
+              message: `Enemy '${enemySlug}' not found.`,
+            });
+          }
+
+          const { data: newEncounter, error: insertError } = await supabase
+            .from("room_encounters")
+            .insert({
+              session_id: sessionId,
+              enemy_id: enemyData.enemy_id,
+              max_hp: enemyData.base_hp,
+              current_hp: enemyData.base_hp,
+              is_alive: true,
+              enemy_slug: enemySlug,
+            })
+            .select("encounter_id")
+            .single();
+
+          if (insertError) {
+            console.error("Error creating new encounter:", insertError);
+            return socket.emit("show_notification", {
+              message: "Failed to create encounter.",
+            });
+          }
+
+          console.log(
+            `New encounter created with ID: ${newEncounter.encounter_id}. Navigating user.`
+          );
+          socket.emit("navigate_to_page", {
+            path: `/combat/${newEncounter.encounter_id}`,
+            scannedBy: socket.id
           });
         }
-
-        const { data: newEncounter, error: insertError } = await supabase
-          .from("room_encounters")
-          .insert({
-            session_id: sessionId,
-            enemy_id: enemyData.enemy_id,
-            max_hp: enemyData.base_hp,
-            current_hp: enemyData.base_hp,
-            is_alive: true,
-            enemy_slug: enemySlug,
-          })
-          .select("encounter_id")
-          .single();
-
-        if (insertError) {
-          console.error("Error creating new encounter:", insertError);
-          return socket.emit("show_notification", {
-            message: "Failed to create encounter.",
-          });
+      } catch (error) {
+        if (error.code !== "PGRST116") {
+          // Ignore "single row not found" errors
+          console.error("Error in qr_code_scanned handler:", error);
         }
-
-        console.log(
-          `New encounter created with ID: ${newEncounter.encounter_id}. Navigating user.`
-        );
-        socket.emit("navigate_to_page", {
-          path: `/combat/${newEncounter.encounter_id}`,
-        });
       }
-    } catch (error) {
-      if (error.code !== "PGRST116") {
-        // Ignore "single row not found" errors
-        console.error("Error in qr_code_scanned handler:", error);
-      }
+    } else {
+      // Unknown encounter type
+      console.error(`[ERROR] Unknown encounter type: ${encounterType}`);
+      socket.emit("show_notification", {
+        message: `Unknown QR code type: ${encounterType}`,
+      });
     }
   });
 

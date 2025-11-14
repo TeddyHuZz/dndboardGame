@@ -56,3 +56,21 @@
     text-transform: uppercase;
     letter-spacing: 2px;
 }
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+
+    .scanner-page {
+        overflow: hidden;
+    }
+
+    .scanner-page-top-left button {
+        transform: scale(0.8);
+        margin-top: 1.5rem;
+    }
+
+    .scanner-page-top-right {
+        transform: scale(0.6);
+    }
+
+}

@@ -5,4 +5,12 @@
     border-radius: 8px;
     overflow: hidden; /* Ensures editor content respects border-radius */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .code-editor-container {
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+}
