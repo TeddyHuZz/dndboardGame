@@ -9,7 +9,31 @@ import { loadGamesByUser, loadGameById } from "./routes/LoadGameAPI.js";
 const app = express();
 const httpServer = createServer(app);
 
-app.use(cors());
+// Dynamic CORS configuration
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://realmquest.vercel.app",
+  process.env.FRONTEND_URL, // Add this to Render env vars
+].filter(Boolean); // Remove undefined values
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      // Check if origin is in whitelist or matches pattern
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+        callback(null, true);
+      } else {
+        console.log(`CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Add the save game route
@@ -19,8 +43,22 @@ app.get("/api/games/session/:sessionId", loadGameById);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:3000", "https://realmquest.vercel.app"],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+        callback(null, true);
+      } else {
+        console.log(`Socket CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST"],
+    credentials: true,
   },
+  transports: ["websocket", "polling"], // Important for Render
+  pingTimeout: 60000, // Increase timeout for Render
+  pingInterval: 25000,
 });
 
 // Store game state in memory
@@ -112,7 +150,7 @@ io.on("connection", (socket) => {
 
   socket.on("qr_code_scanned", async (data) => {
     const { sessionId, path } = data;
-    
+
     console.log(`[QR Scan] Received path: ${path} for session: ${sessionId}`);
 
     // FIXED: Determine if this is a combat or treasure encounter
@@ -124,11 +162,13 @@ io.on("connection", (socket) => {
 
     // Handle TREASURE encounters
     if (encounterType === "treasure") {
-      console.log(`[QR Scan] Treasure room detected, broadcasting to all players...`);
+      console.log(
+        `[QR Scan] Treasure room detected, broadcasting to all players...`
+      );
       // FIXED: Broadcast to ALL players in the session
       io.to(sessionId).emit("navigate_to_page", {
         path: `/treasure/${encounterSlug}`,
-        scannedBy: socket.id
+        scannedBy: socket.id,
       });
       return;
     }
@@ -136,7 +176,7 @@ io.on("connection", (socket) => {
     // Handle COMBAT encounters (original logic)
     if (encounterType === "combat") {
       const enemySlug = encounterSlug;
-      
+
       try {
         const { data: existingEncounter, error: encounterError } = await supabase
           .from("room_encounters")
@@ -160,7 +200,7 @@ io.on("connection", (socket) => {
             // FIXED: Broadcast to ALL players in the session
             io.to(sessionId).emit("navigate_to_page", {
               path: `/combat/${existingEncounter.encounter_id}`,
-              scannedBy: socket.id
+              scannedBy: socket.id,
             });
           }
         } else {
@@ -181,7 +221,6 @@ io.on("connection", (socket) => {
           if (enemyDataError || !enemyData) {
             console.error(
               `[ERROR] Supabase query failed for slug '${enemySlug}'. Error:`,
-
               enemyDataError
             );
             return socket.emit("show_notification", {
@@ -215,7 +254,7 @@ io.on("connection", (socket) => {
           // FIXED: Broadcast to ALL players in the session
           io.to(sessionId).emit("navigate_to_page", {
             path: `/combat/${newEncounter.encounter_id}`,
-            scannedBy: socket.id
+            scannedBy: socket.id,
           });
         }
       } catch (error) {
@@ -255,7 +294,9 @@ io.on("connection", (socket) => {
 
       // ✅ If enemy is defeated, broadcast victory to all players
       if (newHp <= 0) {
-        console.log(`🎉 [Server] Enemy defeated! Broadcasting victory to session ${encounterData.session_id}`);
+        console.log(
+          `🎉 [Server] Enemy defeated! Broadcasting victory to session ${encounterData.session_id}`
+        );
         io.to(encounterData.session_id).emit("combat_victory", {
           encounterId,
         });
@@ -306,6 +347,7 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(3001, () => {
-  console.log("Server is running on port 3001");
+const PORT = process.env.PORT || 3001;
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
