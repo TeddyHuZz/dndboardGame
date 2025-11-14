@@ -93,7 +93,6 @@ const LoadGame = () => {
                 <div className="game-info">
                   <h3>Session: {game.session_code}</h3>
                   <p>Players: {game.player_count}</p>
-                  <p>Stage: {game.current_stage}</p>
                   <p className="game-date">
                     Last Saved: {new Date(game.updated_at).toLocaleString()}
                   </p>

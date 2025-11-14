@@ -65,7 +65,11 @@ const OtherPlayersHP = ({ socket }) => {
             setPlayers(prevPlayers => 
                 prevPlayers.map(player => 
                     player.user_id === updatedPlayer.user_id 
-                        ? { ...player, current_hp: updatedPlayer.current_hp, max_hp: updatedPlayer.max_hp }
+                        ? { 
+                            ...player, 
+                            current_hp: updatedPlayer.current_hp,
+                            max_hp: updatedPlayer.max_hp 
+                          }
                         : player
                 )
             );
