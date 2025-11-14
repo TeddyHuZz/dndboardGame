@@ -82,7 +82,6 @@ io.on("connection", (socket) => {
         io.to(sessionId).emit("selection_update", roomState.selections);
         console.log(
           `Room ${sessionId} selections updated:`,
-
           roomState.selections
         );
 
@@ -125,9 +124,9 @@ io.on("connection", (socket) => {
 
     // Handle TREASURE encounters
     if (encounterType === "treasure") {
-      console.log(`[QR Scan] Treasure room detected, navigating directly...`);
-      // For treasure rooms, navigate directly using the slug as encounter ID
-      socket.emit("navigate_to_page", {
+      console.log(`[QR Scan] Treasure room detected, broadcasting to all players...`);
+      // FIXED: Broadcast to ALL players in the session
+      io.to(sessionId).emit("navigate_to_page", {
         path: `/treasure/${encounterSlug}`,
         scannedBy: socket.id
       });
@@ -156,9 +155,10 @@ io.on("connection", (socket) => {
             });
           } else {
             console.log(
-              `Encounter with slug ${enemySlug} is alive. Navigating to existing encounter.`
+              `Encounter with slug ${enemySlug} is alive. Broadcasting to all players...`
             );
-            socket.emit("navigate_to_page", {
+            // FIXED: Broadcast to ALL players in the session
+            io.to(sessionId).emit("navigate_to_page", {
               path: `/combat/${existingEncounter.encounter_id}`,
               scannedBy: socket.id
             });
@@ -181,6 +181,7 @@ io.on("connection", (socket) => {
           if (enemyDataError || !enemyData) {
             console.error(
               `[ERROR] Supabase query failed for slug '${enemySlug}'. Error:`,
+
               enemyDataError
             );
             return socket.emit("show_notification", {
@@ -209,9 +210,10 @@ io.on("connection", (socket) => {
           }
 
           console.log(
-            `New encounter created with ID: ${newEncounter.encounter_id}. Navigating user.`
+            `New encounter created with ID: ${newEncounter.encounter_id}. Broadcasting to all players...`
           );
-          socket.emit("navigate_to_page", {
+          // FIXED: Broadcast to ALL players in the session
+          io.to(sessionId).emit("navigate_to_page", {
             path: `/combat/${newEncounter.encounter_id}`,
             scannedBy: socket.id
           });
@@ -246,10 +248,18 @@ io.on("connection", (socket) => {
 
     if (encounterData) {
       // Broadcast to all clients in this session
-      io.to(`room_${encounterData.session_id}`).emit("enemy_hp_update", {
+      io.to(encounterData.session_id).emit("enemy_hp_update", {
         encounterId,
         newHp,
       });
+
+      // ✅ If enemy is defeated, broadcast victory to all players
+      if (newHp <= 0) {
+        console.log(`🎉 [Server] Enemy defeated! Broadcasting victory to session ${encounterData.session_id}`);
+        io.to(encounterData.session_id).emit("combat_victory", {
+          encounterId,
+        });
+      }
     }
   });
 

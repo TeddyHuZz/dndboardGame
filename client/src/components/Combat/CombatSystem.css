@@ -117,11 +117,11 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.95); /* FIXED: Increased opacity from 0.85 to 0.95 */
+  background: #000;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 99999; /* FIXED: Increased from 9999 to 99999 */
+  z-index: 99999;
   animation: fadeIn 0.5s ease-in;
 }
 
@@ -130,8 +130,8 @@
   padding: 50px;
   border-radius: 10px;
   animation: scaleIn 0.6s ease-out;
-  position: relative; /* FIXED: Added to ensure proper stacking */
-  z-index: 100000; /* FIXED: Added to ensure it's on top */
+  position: relative;
+  z-index: 100000;
 }
 
 .combat-result-message h1 {

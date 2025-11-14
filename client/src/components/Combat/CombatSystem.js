@@ -72,7 +72,26 @@ const CombatSystem = ({ encounter }) => {
     }
   }, [encounter]);
 
-  // Show loading if critical data is missing
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleCombatVictory = (data) => {
+      console.log("🎉 Victory event received:", data);
+      
+      // Only set victory if it's for this encounter
+      if (data.encounterId === encounter?.encounter_id) {
+        setCombatResult("victory");
+      }
+    };
+
+    socket.on("combat_victory", handleCombatVictory);
+
+    return () => {
+      socket.off("combat_victory", handleCombatVictory);
+    };
+  }, [socket, encounter?.encounter_id]);
+
+  // NOW the conditional returns can come
   if (!question) {
     return <div>Loading Question...</div>;
   }
@@ -409,7 +428,13 @@ ${question.test_harness}
   };
 
   const handleCombatEnd = () => {
-    navigate("/gameplay");
+    if (combatResult === "defeat") {
+      // Navigate to start game page when defeated
+      navigate("/game-dashboard");
+    } else {
+      // Navigate to gameplay page when victorious
+      navigate("/gameplay");
+    }
   };
 
   return (
@@ -419,10 +444,10 @@ ${question.test_harness}
           <div className={`combat-result-message ${combatResult}`}>
             <h1>{combatResult === "victory" ? "VICTORY" : "DEFEAT"}</h1>
             {combatResult === "defeat" && (
-              <p className="defeat-info">Your HP has been reduced to 50%</p>
+              <p className="defeat-info">You have been defeated!</p>
             )}
             <button onClick={handleCombatEnd} className="combat-result-button">
-              {combatResult === "victory" ? "Continue" : "Return to Game"}
+              {combatResult === "victory" ? "Continue" : "Return to Start"}
             </button>
           </div>
         </div>
