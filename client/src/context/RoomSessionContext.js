@@ -4,7 +4,6 @@ const RoomSessionContext = createContext();
 
 export const useRoomSession = () => useContext(RoomSessionContext);
 
-// Helper function to get initial state from sessionStorage
 const getInitialState = (key, defaultValue) => {
   try {
     const item = window.sessionStorage.getItem(key);
@@ -23,7 +22,6 @@ export const RoomSessionProvider = ({ children }) => {
     getInitialState("players", [])
   );
 
-  // Wrapper for setSessionDetails to also update sessionStorage
   const setSessionDetails = (data) => {
     setSessionDetailsState(data);
     try {
@@ -37,7 +35,6 @@ export const RoomSessionProvider = ({ children }) => {
     }
   };
 
-  // Wrapper for setPlayers to also update sessionStorage
   const setPlayers = (data) => {
     setPlayersState(data);
     try {

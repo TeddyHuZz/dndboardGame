@@ -88,7 +88,6 @@ const Header = ({ variant = "full" }) => {
           <span></span>
         </button>
 
-        {/* Navigation - Render based on mobile menu state for better accessibility and to prevent overlap */}
         {(isMobileMenuOpen || window.innerWidth >= 768) && (
           <div
             className={`header-nav-container ${

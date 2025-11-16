@@ -1,7 +1,7 @@
 .combat-system-container {
   background-color: rgba(10, 10, 10, 0.8);
   border-radius: 15px;
-  padding: 1rem; /* Reduced padding */
+  padding: 1rem;
   width: 98%;
   margin: auto;
   border: 1px solid #444;
@@ -15,13 +15,13 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  overflow: hidden; /* Prevent its own content from overflowing */
+  overflow: hidden;
 }
 
 .combat-system-question-text p {
   color: #e0e0e0;
-  font-size: 1rem; /* Reduced font size */
-  line-height: 1.4; /* Reduced line height */
+  font-size: 1rem;
+  line-height: 1.4;
   margin-bottom: 0.5rem;
 }
 
@@ -33,10 +33,10 @@
 
 .editor-output-container {
   display: flex;
-  flex-grow: 1; /* Allow this container to fill the remaining space */
-  gap: 1rem; /* Space between editor and output */
+  flex-grow: 1;
+  gap: 1rem;
   margin-top: 1rem;
-  min-height: 0; /* Important for flexbox children with overflow */
+  min-height: 0;
 }
 
 .editor-wrapper {
@@ -89,28 +89,27 @@
 .combat-system-container h4 {
   color: #d98b09;
   margin-top: 1rem;
-  margin-bottom: 0.5rem; /* Reduced margin */
-  font-size: 1.2rem; /* Reduced font size */
+  margin-bottom: 0.5rem; 
+  font-size: 1.2rem; 
 }
 
 .combat-system-container pre {
   background-color: #1e1e1e;
   color: #d4d4d4;
-  padding: 0.8rem; /* Reduced padding */
+  padding: 0.8rem; 
   border-radius: 8px;
   border: 1px solid #333;
-  min-height: 0; /* Remove min-height to allow shrinking */
+  min-height: 0; 
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-size: 0.9rem; /* Reduced font size */
-  flex-grow: 1; /* Allow output to fill vertical space in its wrapper */
+  font-size: 0.9rem; 
+  flex-grow: 1; 
 }
 
 .combat-system-container pre .error {
-  color: #ff5555; /* Red for errors */
+  color: #ff5555; 
 }
 
-/* Combat Result Overlay */
 .combat-result-overlay {
   position: fixed;
   top: 0;
@@ -252,7 +251,6 @@
     margin-top: 0.75rem;
   }
 
-  /* Adjust combat result for mobile */
   .combat-result-message {
     padding: 30px 20px;
   }

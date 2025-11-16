@@ -1,4 +1,3 @@
-// client/src/components/Gameplay/OtherPlayersHP.js
 import { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 import { useRoomSession } from "../../context/RoomSessionContext";
@@ -10,12 +9,10 @@ const OtherPlayersHP = ({ socket }) => {
     const { profile } = useAuth();
     const [players, setPlayers] = useState([]);
 
-    // Initial fetch of all players in the room
     useEffect(() => {
         const fetchPlayers = async () => {
             if (!sessionDetails?.session_id) return;
 
-            // Fetch room players
             const { data: playersData, error: playersError } = await supabase
                 .from('room_players')
                 .select('user_id, current_hp, max_hp, character_id')
@@ -28,7 +25,6 @@ const OtherPlayersHP = ({ socket }) => {
 
             console.log("Players data:", playersData);
 
-            // Fetch usernames separately
             const userIds = playersData.map(p => p.user_id);
             const { data: usersData, error: usersError } = await supabase
                 .from('user')
@@ -42,13 +38,11 @@ const OtherPlayersHP = ({ socket }) => {
 
             console.log("Users data:", usersData);
 
-            // Combine the data
             const playersWithUsernames = playersData.map(player => ({
                 ...player,
                 user: usersData.find(u => u.user_id === player.user_id)
             }));
 
-            // Filter out the current player
             const otherPlayers = playersWithUsernames.filter(p => p.user_id !== profile?.user_id);
             console.log("Final other players:", otherPlayers);
             setPlayers(otherPlayers);
@@ -57,7 +51,6 @@ const OtherPlayersHP = ({ socket }) => {
         fetchPlayers();
     }, [sessionDetails?.session_id, profile?.user_id]);
 
-    // Listen for real-time HP updates via socket
     useEffect(() => {
         if (!socket) return;
 

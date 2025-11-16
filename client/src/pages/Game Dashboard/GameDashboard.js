@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Add this import
+import { useNavigate } from "react-router-dom"; 
 import "./GameDashboard.css";
 import CreateGamePopup from "../../components/Popup/CreateGamePopup";
 import JoinGamePopup from "../../components/Popup/JoinGamePopup";
@@ -12,7 +12,7 @@ export function GameDashboard() {
   const [isJoinGamePopupVisible, setIsJoinGamePopupVisible] = useState(false);
   const { setPlayers, setSessionDetails } = useRoomSession();
   const { session, profile } = useAuth();
-  const navigate = useNavigate(); // Add this
+  const navigate = useNavigate(); 
 
   const handleClosePopup = () => {
     setIsPopupVisible(false);
@@ -30,7 +30,6 @@ export function GameDashboard() {
     }
 
     try {
-      // 1. Find the room session with the given code
       const { data: roomData, error: roomError } = await supabase
         .from("room_sessions")
         .select("*")
@@ -44,12 +43,10 @@ export function GameDashboard() {
         );
       }
 
-      // Prevent user from joining their own game
       if (roomData.user_id === profile.user_id) {
         throw new Error("You can't join your own game.");
       }
 
-      // 2. Check if player already in room
       const { data: existingPlayer } = await supabase
         .from("room_players")
         .select("player_id")
@@ -61,7 +58,6 @@ export function GameDashboard() {
         throw new Error("You are already in this room.");
       }
 
-      // 3. Add player to room_players table
       const { error: insertError } = await supabase
         .from("room_players")
         .insert({
@@ -71,7 +67,6 @@ export function GameDashboard() {
 
       if (insertError) throw insertError;
 
-      // 4. Fetch all players in the room (with their user info)
       const { data: playersData, error: playersError } = await supabase
         .from("room_players")
         .select(
@@ -84,17 +79,14 @@ export function GameDashboard() {
 
       if (playersError) throw playersError;
 
-      // Transform the data to match expected format
       const playersList = playersData.map((p) => ({
         user_id: p.user.user_id,
         username: p.user.username,
       }));
 
-      // 5. Update context state
       setSessionDetails(roomData);
       setPlayers(playersList);
 
-      // 6. Show the lobby view
       setIsJoinGamePopupVisible(false);
       setIsPopupVisible(true);
       return true;
@@ -125,7 +117,6 @@ export function GameDashboard() {
     try {
       const sessionCode = generateSessionCode();
 
-      // 1. Create room session
       const { data: roomData, error: roomError } = await supabase
         .from("room_sessions")
         .insert({
@@ -138,7 +129,6 @@ export function GameDashboard() {
 
       if (roomError) throw roomError;
 
-      // 2. Add host as first player in room_players
       const { error: playerError } = await supabase
         .from("room_players")
         .insert({
@@ -148,7 +138,6 @@ export function GameDashboard() {
 
       if (playerError) throw playerError;
 
-      // 3. Set context
       setSessionDetails(roomData);
       setPlayers([profile]);
       setIsPopupVisible(true);

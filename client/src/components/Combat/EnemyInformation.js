@@ -3,7 +3,6 @@ import { supabase } from "../../supabaseClient";
 import { useRoomSession } from "../../context/RoomSessionContext";
 import "./EnemyInformation.css";
 
-// FIX: Accept encounter and enemy as props instead of fetching them
 const EnemyInformation = ({
   socket,
   encounter: initialEncounter,
@@ -20,14 +19,12 @@ const EnemyInformation = ({
   });
   const { sessionDetails } = useRoomSession();
 
-  // Listen for real-time HP updates via socket
   useEffect(() => {
     if (!socket) return;
 
     const handleEnemyHpUpdate = (updatedEnemy) => {
       console.log("Enemy HP update received:", updatedEnemy);
 
-      // Update if it's the same encounter
       if (updatedEnemy.encounterId === initialEncounter.encounter_id) {
         setEnemy((prevEnemy) => ({
           ...prevEnemy,
@@ -44,7 +41,6 @@ const EnemyInformation = ({
     };
   }, [socket, initialEncounter.encounter_id]);
 
-  // Subscribe to Supabase real-time updates
   useEffect(() => {
     if (!sessionDetails?.session_id) return;
 
@@ -75,18 +71,16 @@ const EnemyInformation = ({
     };
   }, [sessionDetails?.session_id, initialEncounter.encounter_id]);
 
-  // Calculate health percentage for the health bar
   const getHealthPercentage = () => {
     if (!enemy || enemy.max_hp === 0) return 0;
     return (enemy.current_hp / enemy.max_hp) * 100;
   };
 
-  // Get color based on health percentage
   const getHealthBarColor = () => {
     const percentage = getHealthPercentage();
-    if (percentage > 60) return "#4caf50"; // Green
-    if (percentage > 30) return "#ff9800"; // Orange
-    return "#f44336"; // Red
+    if (percentage > 60) return "#4caf50";
+    if (percentage > 30) return "#ff9800";
+    return "#f44336";
   };
 
   return (

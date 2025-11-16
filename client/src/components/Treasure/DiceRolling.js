@@ -13,9 +13,8 @@ const DiceRolling = ({ encounterId, onResult }) => {
     setShowResult(false);
     setResult(null);
 
-    // 2-second rolling animation
     setTimeout(() => {
-      const rolledNumber = Math.floor(Math.random() * 21); // 0-20
+      const rolledNumber = Math.floor(Math.random() * 21);
       const outcome = rolledNumber > 10 ? "win" : "lose";
 
       setResult({
@@ -26,8 +25,6 @@ const DiceRolling = ({ encounterId, onResult }) => {
       setIsRolling(false);
       setShowResult(true);
 
-      // Call parent callback to apply HP changes and navigate away
-      // This happens while the result is being shown to the user
       onResult(outcome);
     }, 2000);
   };

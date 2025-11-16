@@ -52,7 +52,6 @@
   letter-spacing: 0.05em;
 }
 
-/* Hamburger Menu Button - Mobile Only */
 .hamburger-menu {
   display: flex;
   flex-direction: column;
@@ -89,7 +88,6 @@
   transform: rotate(-45deg);
 }
 
-/* Mobile Menu Overlay */
 .mobile-menu-overlay {
   display: none;
   position: fixed;
@@ -101,7 +99,6 @@
   z-index: 998;
 }
 
-/* Navigation Container - Mobile Styles */
 .header-nav-container {
   position: fixed;
   top: 0;
@@ -271,7 +268,6 @@
   color: #d98b09;
 }
 
-/* Tablet Breakpoint (md: 768px) */
 @media (min-width: 768px) {
   .header-content-wrapper {
     height: 5rem;
@@ -381,7 +377,6 @@
   }
 }
 
-/* Large Desktop (lg: 1024px) */
 @media (min-width: 1024px) {
   .header-content-wrapper {
     padding: 1rem 2rem;
@@ -404,7 +399,6 @@
   }
 }
 
-/* Extra Large Desktop (xl: 1280px) */
 @media (min-width: 1280px) {
   .header-left,
   .header-right {

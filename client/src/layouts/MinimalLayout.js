@@ -10,7 +10,6 @@ const MinimalLayout = () => {
       <main>
         <Outlet />
       </main>
-      {/* Footer here */}
     </>
   );
 };

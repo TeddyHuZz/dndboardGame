@@ -1,9 +1,8 @@
-/* CodeEditor.css */
 .code-editor-container {
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 8px;
-    overflow: hidden; /* Ensures editor content respects border-radius */
+    overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 

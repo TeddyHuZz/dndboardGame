@@ -7,8 +7,6 @@ if (!supabaseUrl || !supabasePublishableKey) {
   console.warn('⚠️ Missing Supabase environment variables!');
 }
 
-// Use a STANDARD, simple client configuration.
-// This allows Supabase to manage the session correctly.
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabasePublishableKey || 'placeholder-key',

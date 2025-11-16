@@ -27,7 +27,6 @@ const Signin = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         
-        // Prevent double-submission
         if (e.target.disabled) return;
         e.target.disabled = true;
         
@@ -41,7 +40,6 @@ const Signin = () => {
     
             console.log('Login successful, navigating...');
             
-            // Small delay before navigation to let auth state settle
             setTimeout(() => {
                 navigate("/game-dashboard", { replace: true });
             }, 300);

@@ -6,7 +6,6 @@
   background: transparent;
 }
 
-/* Add dark overlay for better readability */
 .treasure-room-container::before {
   content: "";
   position: absolute;
@@ -21,12 +20,12 @@
 
 /* Banner styling */
 .treasure-room-banner {
-  position: fixed; /* Use fixed to ensure it's always in the background */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1; /* Set z-index to -1 to place it behind everything */
+  z-index: -1; 
   overflow: hidden;
 }
 
@@ -37,7 +36,7 @@
   filter: brightness(0.6);
 }
 
-/* Dice rolling component - centered card */
+/* Dice rolling component */
 .treasure-room-container .dice-rolling-container {
   width: 100%;
   height: 100%;
@@ -49,13 +48,11 @@
   background: transparent;
 }
 
-/* Override dice rolling container internal styles */
 .dice-rolling-container .dice-rolling-card {
   position: relative;
   z-index: 11;
 }
 
-/* Full screen for reward/punish components */
 .treasure-room-container .treasure-reward-container,
 .treasure-room-container .treasure-punish-container {
   width: 100%;

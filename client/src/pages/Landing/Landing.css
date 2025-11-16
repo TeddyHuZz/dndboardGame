@@ -13,7 +13,6 @@
   height: calc(var(--banner-count, 1) * 100vh);
 }
 
-/* Define theme colors and animations at the root for reusability */
 :root {
   --background: #000;
   --accent: #ff8c00;
@@ -91,7 +90,7 @@
   );
 }
 
-/* Content Elements - Mobile First */
+/* Content Elements */
 .banner-content-wrapper {
   position: relative;
   z-index: 10;
@@ -116,7 +115,7 @@
   margin-top: 1rem;
 }
 
-/* Text and Button Styling - Mobile First */
+/* Text and Button Styling */
 .content-subtitle-wrapper,
 .content-title-wrapper,
 .content-description-wrapper,
@@ -227,7 +226,6 @@
   height: calc(var(--banner-count, 1) * 100vh);
 }
 
-/* Tablet Breakpoint (sm: 640px) */
 @media (min-width: 640px) {
   .banner-content-wrapper {
     padding-left: 1.5rem;
@@ -261,7 +259,6 @@
   }
 }
 
-/* Medium Devices (md: 768px) */
 @media (min-width: 768px) {
   .banner-content > * + * {
     margin-top: 1.5rem;
@@ -327,7 +324,6 @@
   }
 }
 
-/* Large Devices (lg: 1024px) */
 @media (min-width: 1024px) {
   .content-title {
     font-size: 4.5rem;
@@ -351,21 +347,18 @@
   }
 }
 
-/* Extra Large Devices (xl: 1280px) */
 @media (min-width: 1280px) {
   .content-title {
     font-size: 5rem;
   }
 }
 
-/* 2XL Devices (2xl: 1536px) */
 @media (min-width: 1536px) {
   .content-title {
     font-size: 6rem;
   }
 }
 
-/* Handle very small mobile screens */
 @media (max-width: 375px) {
   .content-title {
     font-size: 1.75rem;
@@ -386,7 +379,6 @@
   }
 }
 
-/* Landscape orientation on mobile */
 @media (max-height: 600px) and (orientation: landscape) {
   .banner-content-wrapper {
     padding-top: 1rem;

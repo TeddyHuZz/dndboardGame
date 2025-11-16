@@ -68,7 +68,6 @@ export function Landing() {
     const handleVisibilityChange = () => {
       isTabVisible = !document.hidden;
       if (document.hidden && rafId) {
-        // Cancel any pending RAF when tab becomes hidden
         window.cancelAnimationFrame(rafId);
         rafId = null;
         ticking = false;
@@ -76,7 +75,6 @@ export function Landing() {
     };
 
     const handleScroll = () => {
-      // Don't process scroll if tab is hidden
       if (!isTabVisible) return;
 
       if (!ticking) {
@@ -86,11 +84,9 @@ export function Landing() {
           const documentHeight =
             document.documentElement.scrollHeight - windowHeight;
 
-          // Calculate scroll progress (0 to 1)
           const progress = Math.min(scrollPosition / documentHeight, 1);
           setScrollProgress(progress);
 
-          // Determine which banner to show based on scroll position
           const bannerIndex = Math.min(
             Math.floor(progress * banners.length),
             banners.length - 1
@@ -116,21 +112,19 @@ export function Landing() {
     };
   }, []);
 
-  // Memoize banner to prevent unnecessary recalculations
   const banner = useMemo(() => banners[currentBanner], [currentBanner]);
 
   return (
     <div className="banner-container">
-      {/* Main Banner Section - Fixed */}
+      {/* Main Banner Section */}
       <section className="banner-section">
-        {/* Background Image with Parallax - ONLY RENDER CURRENT BANNER */}
         <div className="banner-background-wrapper">
           <div className="banner-background" style={{ opacity: 1 }}>
             <img
               src={banner.image || "/placeholder.svg"}
               alt={banner.title}
               className="banner-image"
-              key={banner.id} // Force re-render on change
+              key={banner.id} 
             />
             <div className="banner-gradient" />
           </div>

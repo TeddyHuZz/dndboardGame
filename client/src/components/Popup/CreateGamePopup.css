@@ -127,7 +127,6 @@
   background-color: #865e17;
 }
 
-/* Desktop Styles */
 @media (min-width: 768px) {
   .create-game-popup-content {
     max-width: 650px;

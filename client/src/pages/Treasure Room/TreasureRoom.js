@@ -22,7 +22,6 @@ const TreasureRoom = () => {
     setIsProcessing(true);
 
     try {
-      // 1. Get player's current HP and character info from room_players
       const { data: playerData, error: playerError } = await supabase
         .from("room_players")
         .select("current_hp, character_id")
@@ -32,36 +31,32 @@ const TreasureRoom = () => {
 
       if (playerError) throw playerError;
 
-      // 2. Get character's base_hp (max HP) from character_classes
       const { data: characterData, error: characterError } = await supabase
         .from("character_classes")
-        .select("base_hp") // FIX: Use the correct column name 'base_hp'
+        .select("base_hp") 
         .eq("character_id", playerData.character_id)
         .single();
 
       if (characterError) throw characterError;
 
       const currentHp = playerData.current_hp;
-      const maxHp = characterData.base_hp; // FIX: Use the correct property from the fetched data
+      const maxHp = characterData.base_hp; 
       let newHp;
 
       if (result === "win") {
-        // REWARD LOGIC: Heal for 30% of max HP
         const healAmount = Math.ceil(maxHp * 0.3);
         newHp = Math.min(currentHp + healAmount, maxHp);
         console.log(
           `Player healed: ${currentHp} -> ${newHp} HP (+${healAmount})`
         );
       } else {
-        // PUNISHMENT LOGIC: Damage for 30% of current HP
         const damageAmount = Math.ceil(currentHp * 0.3);
-        newHp = Math.max(currentHp - damageAmount, 1); // Ensure player has at least 1 HP
+        newHp = Math.max(currentHp - damageAmount, 1); 
         console.log(
           `Player damaged: ${currentHp} -> ${newHp} HP (-${damageAmount})`
         );
       }
 
-      // 3. Update player HP in database
       const { error: updateError } = await supabase
         .from("room_players")
         .update({ current_hp: newHp })
@@ -70,7 +65,6 @@ const TreasureRoom = () => {
 
       if (updateError) throw updateError;
 
-      // 4. Emit socket event to update HP for all clients
       if (socket) {
         socket.emit("update_player_hp", {
           sessionId: sessionDetails.session_id,
@@ -81,10 +75,9 @@ const TreasureRoom = () => {
     } catch (error) {
       console.error("Error applying treasure outcome:", error);
     } finally {
-      // 5. Navigate back to the gameplay screen after a delay
       setTimeout(() => {
         navigate("/gameplay");
-      }, 3000); // Wait 3s after logic is done before navigating
+      }, 3000);
     }
   };
 

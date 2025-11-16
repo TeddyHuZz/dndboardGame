@@ -60,17 +60,14 @@
         overflow: hidden;
     }
 
-  /* Hide map on mobile */
   .top-left {
     display: none;
   }
 
-  /* Hide teammates panel on mobile */
   .side-content {
     display: none;
   }
 
-  /* Center and make settings smaller on mobile */
   .top-content {
     justify-content: right;
   }
@@ -85,7 +82,6 @@
     transform: scale(0.6);
   }
 
-  /* Adjust spacing for mobile */
     .bottom-content {
         align-items: center;
         justify-content: center;
