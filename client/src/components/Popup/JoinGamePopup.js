@@ -14,14 +14,11 @@ function JoinGamePopup({ onClose, onJoin }) {
     setIsLoading(true);
     setError(null);
     
-    // Call the parent function and wait for the result
     const success = await onJoin(sessionCode.trim());
     
-    // Only set loading to false if the operation failed, 
-    // because on success, this component will be unmounted.
     if (!success) {
       setIsLoading(false);
-      setError("Failed to join room."); // Generic error, parent shows detailed alert
+      setError("Failed to join room.");
     }
   };
 

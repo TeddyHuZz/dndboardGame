@@ -14,7 +14,6 @@ const CodeEditorWindow = ({ code, onChange }) => {
   };
 
   useEffect(() => {
-    // Debounce resize events
     let resizeTimeout;
     const handleResize = () => {
       clearTimeout(resizeTimeout);

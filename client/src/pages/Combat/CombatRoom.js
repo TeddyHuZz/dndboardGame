@@ -10,12 +10,10 @@ import CombatSystem from "../../components/Combat/CombatSystem";
 import "./CombatRoom.css";
 
 const CombatRoom = ({ socket }) => {
-  // The URL now contains the numeric encounterId, not the slug.
   const { encounterId } = useParams();
   const navigate = useNavigate();
   const { sessionDetails } = useRoomSession();
 
-  // State to hold the fetched data
   const [encounter, setEncounter] = useState(null);
   const [enemy, setEnemy] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,17 +30,14 @@ const CombatRoom = ({ socket }) => {
       }
 
       try {
-        // ADD LOGGING: Log what we're searching for
         console.log(`[CombatRoom] Fetching encounter with ID: ${encounterId}`);
 
-        // Step 1: Fetch the encounter details from `room_encounters` using the ID.
         const { data: encounterData, error: encounterError } = await supabase
           .from("room_encounters")
           .select("*")
           .eq("encounter_id", encounterId)
           .single();
 
-        // ADD LOGGING: Log the result
         console.log(`[CombatRoom] Encounter query result:`, {
           encounterData,
           encounterError,
@@ -60,19 +55,16 @@ const CombatRoom = ({ socket }) => {
 
         setEncounter(encounterData);
 
-        // ADD LOGGING: Log what enemy we're searching for
         console.log(
           `[CombatRoom] Fetching enemy with ID: ${encounterData.enemy_id}`
         );
 
-        // Step 2: Use the `enemy_id` from the encounter to get enemy base stats
         const { data: enemyData, error: enemyError } = await supabase
           .from("enemy_data")
           .select("*")
           .eq("enemy_id", encounterData.enemy_id)
           .single();
 
-        // ADD LOGGING: Log the result
         console.log(`[CombatRoom] Enemy query result:`, {
           enemyData,
           enemyError,
@@ -100,9 +92,8 @@ const CombatRoom = ({ socket }) => {
     };
 
     initializeCombat();
-  }, [encounterId]); // Removed navigate from dependencies, it's not needed.
+  }, [encounterId]);
 
-  // FIX: Adjust the loading and error guards for clarity.
   if (loading) {
     return <div className="combat-room-information">Loading Combat...</div>;
   }
@@ -116,7 +107,6 @@ const CombatRoom = ({ socket }) => {
     );
   }
 
-  // If we are not loading and have no error, but still no encounter, something is wrong.
   if (!encounter || !enemy) {
     return (
       <div className="combat-room-information">
@@ -139,7 +129,6 @@ const CombatRoom = ({ socket }) => {
           <GameSettings />
         </div>
         <div className="combat-room-top-left">
-          {/* Pass the full enemy and encounter objects to the display component */}
           {encounter && enemy && (
             <EnemyInformation
               socket={socket}
@@ -159,7 +148,6 @@ const CombatRoom = ({ socket }) => {
       </div>
 
       <div className="combat-room-bottom">
-        {/* This part is correct: pass the full encounter object as a prop */}
         <CombatSystem encounter={encounter} />
       </div>
     </div>

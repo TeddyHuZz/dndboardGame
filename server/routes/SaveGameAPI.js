@@ -8,7 +8,6 @@ export const saveGame = async (req, res) => {
   }
 
   try {
-    // Step 1: Update player states
     const playerUpdates = playerStates.map((player) =>
       supabase
         .from("room_players")
@@ -19,8 +18,7 @@ export const saveGame = async (req, res) => {
     const playerError = playerResults.find((result) => result.error);
     if (playerError) throw playerError.error;
 
-    // Step 2: Update the session's timestamp and saved status
-    console.log(`Updating room_session ${sessionId} to is_game_saved: true`); // Add log
+    console.log(`Updating room_session ${sessionId} to is_game_saved: true`);
     const { error: sessionError } = await supabase
       .from("room_sessions")
       .update({
@@ -29,14 +27,12 @@ export const saveGame = async (req, res) => {
       })
       .eq("session_id", sessionId);
 
-    // --- FIX: Explicitly check for an error on the session update ---
     if (sessionError) {
       console.error(`Error updating room_session ${sessionId}:`, sessionError);
       throw new Error("Failed to update the session status.");
     }
-    console.log(`Successfully updated room_session ${sessionId}.`); // Add success log
+    console.log(`Successfully updated room_session ${sessionId}.`);
 
-    // Step 3: Fetch the updated player data to send back
     const { data: updatedPlayers, error: fetchError } = await supabase
       .from("room_players")
       .select("*")

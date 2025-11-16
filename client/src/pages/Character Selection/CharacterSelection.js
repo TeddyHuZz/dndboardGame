@@ -20,17 +20,14 @@ export function CharacterSelection() {
   const [characterHealer, setCharacterHealer] = useState(null);
   const [characterMage, setCharacterMage] = useState(null);
 
-  // Setup socket listeners (but don't create socket)
   useEffect(() => {
     if (!socket) return;
 
-    // Listener for selection updates from the server
     const handleSelectionUpdate = (selections) => {
       console.log("Received selection update: ", selections);
       setPlayerSelections(selections);
     };
 
-    // Listener to start the game
     const handleStartGame = () => {
       console.log("ALL players are ready! Starting the game...");
       navigate("/gameplay");
@@ -39,7 +36,6 @@ export function CharacterSelection() {
     socket.on("selection_update", handleSelectionUpdate);
     socket.on("start_game", handleStartGame);
 
-    // Cleanup listeners
     return () => {
       socket.off("selection_update", handleSelectionUpdate);
       socket.off("start_game", handleStartGame);
@@ -117,7 +113,6 @@ export function CharacterSelection() {
     );
 
     if (socket && sessionDetails?.session_id && profile?.user_id) {
-      // Send selection to the server
       socket.emit("character_selected", {
         sessionId: sessionDetails.session_id,
         characterId: characterId,
@@ -156,7 +151,6 @@ export function CharacterSelection() {
 
   return (
     <div className="character-selection-container">
-      {/* Character Selection Banner Section */}
       <div className="character-selection-banner">
         <img
           src="/images/banners/game-dashboard-banner.jpg"

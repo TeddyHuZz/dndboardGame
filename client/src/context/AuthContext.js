@@ -8,24 +8,20 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Use a ref to track the current session to avoid stale closures in the listener
   const sessionRef = useRef(session);
   useEffect(() => {
     sessionRef.current = session;
   }, [session]);
 
   useEffect(() => {
-    // Supabase fires an initial event 'INITIAL_SESSION' or 'SIGNED_IN' on page load.
-    // We listen for all auth events here.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log(`-> Auth event received: ${event}`);
         
-        // then it's a redundant event from a tab focus. We can safely ignore it.
         const currentSession = sessionRef.current;
         if (event === 'SIGNED_IN' && currentSession?.user?.id === newSession?.user?.id) {
           console.log('-> Redundant event for same user. Ignoring to prevent freeze.');
-          setLoading(false); // Ensure app is usable if this is the first event
+          setLoading(false);
           return;
         }
 
@@ -34,7 +30,6 @@ export const AuthProvider = ({ children }) => {
 
         if (newSession) {
           try {
-            // Add timeout to prevent hanging queries
             const timeoutPromise = new Promise((_, reject) => 
               setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
             );
@@ -62,11 +57,10 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
-    // Cleanup the subscription on component unmount
     return () => {
       subscription?.unsubscribe();
     };
-  }, []); // Run this effect only once on mount
+  }, []);
 
   const value = {
     session,

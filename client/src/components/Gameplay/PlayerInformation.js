@@ -107,7 +107,6 @@ const PlayerInformation = ({ socket }) => {
     useEffect(() => {
         if (!sessionDetails?.session_id || !profile?.user_id) return;
 
-        // Subscribe to realtime changes for this player
         const channel = supabase
             .channel(`player_hp:${profile.user_id}`)
             .on(
@@ -137,7 +136,6 @@ const PlayerInformation = ({ socket }) => {
     useEffect(() => {
         if (!socket) return;
 
-        // Listen for HP updates
         socket.on('player_hp_update', (updatedPlayer) => {
             if (updatedPlayer.user_id === profile?.user_id) {
                 setPlayer(prevPlayer => ({
@@ -148,11 +146,9 @@ const PlayerInformation = ({ socket }) => {
             }
         });
 
-        // Listen for character selection updates
         socket.on('character_selection_update', async (updatedPlayer) => {
             console.log('Received character selection update:', updatedPlayer);
             
-            // Update other players if someone else selected a character
             if (updatedPlayer.user_id !== profile?.user_id) {
                 const { data: characterData, error: characterError } = await supabase
                     .from('character_classes')
@@ -165,7 +161,6 @@ const PlayerInformation = ({ socket }) => {
                         const existingPlayerIndex = prevPlayers.findIndex(p => p.user_id === updatedPlayer.user_id);
                         
                         if (existingPlayerIndex !== -1) {
-                            // Update existing player
                             const newPlayers = [...prevPlayers];
                             newPlayers[existingPlayerIndex] = {
                                 ...newPlayers[existingPlayerIndex],
@@ -175,7 +170,6 @@ const PlayerInformation = ({ socket }) => {
                             };
                             return newPlayers;
                         } else {
-                            // Add new player (shouldn't happen normally, but just in case)
                             return [...prevPlayers, {
                                 user_id: updatedPlayer.user_id,
                                 character_id: updatedPlayer.character_id,
@@ -186,7 +180,6 @@ const PlayerInformation = ({ socket }) => {
                     });
                 }
             } else {
-                // Update current player if they selected a character
                 const { data: characterData, error: characterError } = await supabase
                     .from('character_classes')
                     .select('character_image, character_name')
@@ -221,7 +214,6 @@ const PlayerInformation = ({ socket }) => {
     return (
         <div className="player-information">
             <div className="characters-container">
-                {/* Main Player Character Image */}
                 {player.character_image ? (
                     <div className="player-character-image">
                         <img src={player.character_image} alt={player.character_name || "Player Character"} />
@@ -232,7 +224,6 @@ const PlayerInformation = ({ socket }) => {
                     </div>
                 )}
                 
-                {/* Other Players' Character Images */}
                 {otherPlayers.length > 0 && (
                     <div className="other-players-characters">
                         {otherPlayers.map((otherPlayer) => (

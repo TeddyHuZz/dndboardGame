@@ -13,7 +13,6 @@ const QRCodeScanner = ({ onDecode, onError }) => {
     detectedCodes.forEach((detectedCode) => {
       const { boundingBox, cornerPoints } = detectedCode;
 
-      // Draw bounding box
       ctx.strokeStyle = "#00FF00";
       ctx.lineWidth = 4;
       ctx.strokeRect(
@@ -23,7 +22,6 @@ const QRCodeScanner = ({ onDecode, onError }) => {
         boundingBox.height
       );
 
-      // Draw corner points
       ctx.fillStyle = "#FF0000";
       cornerPoints.forEach((point) => {
         ctx.beginPath();
@@ -33,24 +31,20 @@ const QRCodeScanner = ({ onDecode, onError }) => {
     });
   };
 
-  // ✅ Handle scan result with navigation
   const handleScan = (result) => {
     if (result && result.length > 0) {
       const rawValue = result[0].rawValue;
       console.log("QR Scanned:", rawValue);
 
       try {
-        // Try to parse as URL
         const url = new URL(rawValue);
         const path = url.pathname;
 
-        // Check if it's a combat encounter
         if (path.startsWith("/combat/")) {
           const encounterId = path.split("/combat/")[1];
           console.log("Navigating to combat:", encounterId);
           navigate(`/combat/${encounterId}`);
         }
-        // Check if it's a treasure encounter
         else if (path.startsWith("/treasure/")) {
           const encounterId = path.split("/treasure/")[1];
           console.log("Navigating to treasure:", encounterId);
@@ -62,7 +56,6 @@ const QRCodeScanner = ({ onDecode, onError }) => {
           console.error("Invalid path:", path);
         }
       } catch (err) {
-        // If it's not a full URL, try to extract path directly
         const rawPath = rawValue.trim();
 
         if (rawPath.startsWith("/combat/")) {
@@ -81,14 +74,12 @@ const QRCodeScanner = ({ onDecode, onError }) => {
         }
       }
 
-      // Call parent's onDecode function if provided
       if (onDecode) {
         onDecode(rawValue);
       }
     }
   };
 
-  // ✅ Handle scan errors
   const handleError = (error) => {
     console.error("Scanner error:", error);
     setScanError("Camera error. Please check permissions.");

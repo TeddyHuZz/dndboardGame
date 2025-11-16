@@ -8,7 +8,6 @@ import { useSocket } from "../../context/SocketContext";
 import "./CombatSystem.css";
 import CodeEditorWindow from "./CodeEditorWindow";
 
-// FIX: Accept the full `encounter` object as a prop, not the ID.
 const CombatSystem = ({ encounter }) => {
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
@@ -21,7 +20,6 @@ const CombatSystem = ({ encounter }) => {
   const { socket } = useSocket();
   const navigate = useNavigate();
 
-  // Debug: Log context values on mount
   useEffect(() => {
     console.log("🔍 CombatSystem mounted with:");
     console.log("  - profile:", profile);
@@ -78,7 +76,6 @@ const CombatSystem = ({ encounter }) => {
     const handleCombatVictory = (data) => {
       console.log("🎉 Victory event received:", data);
       
-      // Only set victory if it's for this encounter
       if (data.encounterId === encounter?.encounter_id) {
         setCombatResult("victory");
       }
@@ -91,7 +88,6 @@ const CombatSystem = ({ encounter }) => {
     };
   }, [socket, encounter?.encounter_id]);
 
-  // NOW the conditional returns can come
   if (!question) {
     return <div>Loading Question...</div>;
   }
@@ -199,7 +195,6 @@ ${question.test_harness}
   };
 
   const calculatePlayerDamage = async () => {
-    // Double-check at the point of execution
     if (!profile) {
       console.error("❌ Missing profile at calculatePlayerDamage execution");
       setOutput("Error: Player profile not loaded. Please refresh the page.");
@@ -265,7 +260,6 @@ ${question.test_harness}
       const newHp = Math.max(0, encounterData.current_hp - playerDamage);
       console.log("Enemy new HP:", newHp);
 
-      // FIXED: Always update the current_hp in the database
       const updateData = { current_hp: newHp };
       if (newHp <= 0) {
         updateData.is_alive = false;
@@ -286,7 +280,6 @@ ${question.test_harness}
 
       console.log("✅ Enemy HP updated in database");
 
-      // Emit socket event for real-time updates
       if (socket) {
         console.log("📡 Emitting update_enemy_hp event");
         socket.emit("update_enemy_hp", {
@@ -332,21 +325,18 @@ ${question.test_harness}
 
       const newHp = Math.max(0, playerData.current_hp - enemyDamage);
 
-      // Update local state
       setPlayers(
         players.map((p) =>
           p.user_id === profile.user_id ? { ...p, current_hp: newHp } : p
         )
       );
 
-      // Update database
       await supabase
         .from("room_players")
         .update({ current_hp: newHp })
         .eq("session_id", sessionDetails.session_id)
         .eq("user_id", profile.user_id);
 
-      // Emit socket event
       if (socket) {
         socket.emit("update_player_hp", {
           sessionId: sessionDetails.session_id,
@@ -429,10 +419,8 @@ ${question.test_harness}
 
   const handleCombatEnd = () => {
     if (combatResult === "defeat") {
-      // Navigate to start game page when defeated
       navigate("/game-dashboard");
     } else {
-      // Navigate to gameplay page when victorious
       navigate("/gameplay");
     }
   };

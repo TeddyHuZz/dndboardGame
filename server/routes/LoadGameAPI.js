@@ -4,7 +4,6 @@ export const loadGamesByUser = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // First, get the session IDs for the user from the room_players table
     const { data: playerSessions, error: playerError } = await supabase
       .from("room_players")
       .select("session_id")
@@ -12,12 +11,11 @@ export const loadGamesByUser = async (req, res) => {
 
     if (playerError) throw playerError;
     if (!playerSessions || playerSessions.length === 0) {
-      return res.json({ success: true, games: [] }); // User is not in any sessions
+      return res.json({ success: true, games: [] });
     }
 
     const sessionIds = playerSessions.map((ps) => ps.session_id);
 
-    // Now, fetch the details for those sessions, applying the filters
     const { data, error } = await supabase
       .from("room_sessions")
       .select(
@@ -29,16 +27,16 @@ export const loadGamesByUser = async (req, res) => {
         room_players (count)
       `
       )
-      .in("session_id", sessionIds) // Match the sessions the user is in
-      .eq("is_game_saved", true) // --- Only show saved games
-      .eq("session_status", "In game") // --- Only show active games
+      .in("session_id", sessionIds)
+      .eq("is_game_saved", true) 
+      .eq("session_status", "In game") 
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
 
     const games = data.map((game) => ({
       ...game,
-      player_count: game.room_players[0]?.count || 0, // Correctly extract count
+      player_count: game.room_players[0]?.count || 0, 
     }));
 
     res.json({ success: true, games });
@@ -50,7 +48,7 @@ export const loadGamesByUser = async (req, res) => {
 
 export const loadGameById = async (req, res) => {
   const { sessionId } = req.params;
-  console.log(`Attempting to load game with session ID: ${sessionId}`); // Log entry
+  console.log(`Attempting to load game with session ID: ${sessionId}`); 
 
   try {
     const { data: sessionData, error: sessionError } = await supabase
@@ -59,7 +57,6 @@ export const loadGameById = async (req, res) => {
       .eq("session_id", sessionId)
       .single();
 
-    // Critical: Check for errors or if no data was found
     if (sessionError) {
       console.error("Supabase error fetching session:", sessionError.message);
       throw new Error(sessionError.message);

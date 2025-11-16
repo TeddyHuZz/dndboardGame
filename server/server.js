@@ -9,20 +9,17 @@ import { loadGamesByUser, loadGameById } from "./routes/LoadGameAPI.js";
 const app = express();
 const httpServer = createServer(app);
 
-// Dynamic CORS configuration
 const allowedOrigins = [
   "http://localhost:3000",
   "https://realmquest.vercel.app",
-  process.env.FRONTEND_URL, // Add this to Render env vars
-].filter(Boolean); // Remove undefined values
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
 
-      // Check if origin is in whitelist or matches pattern
       if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
         callback(null, true);
       } else {
@@ -36,7 +33,6 @@ app.use(
 
 app.use(express.json());
 
-// Add the save game route
 app.post("/api/games/save", saveGame);
 app.get("/api/games/load/:userId", loadGamesByUser);
 app.get("/api/games/session/:sessionId", loadGameById);
@@ -56,12 +52,11 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
     credentials: true,
   },
-  transports: ["websocket", "polling"], // Important for Render
-  pingTimeout: 60000, // Increase timeout for Render
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
   pingInterval: 25000,
 });
 
-// Store game state in memory
 const gameStates = {};
 
 io.on("connection", (socket) => {
@@ -71,7 +66,6 @@ io.on("connection", (socket) => {
     socket.join(sessionId);
     console.log(`Socket ${socket.id} joined room ${sessionId}`);
 
-    // Count current players
     const { count: currentPlayerCount, error: countError } = await supabase
       .from("room_players")
       .select("*", { count: "exact", head: true })
@@ -86,7 +80,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Initialize OR update game state
     if (!gameStates[sessionId]) {
       gameStates[sessionId] = {
         selections: {},
@@ -96,14 +89,12 @@ io.on("connection", (socket) => {
         `Initialized state for room ${sessionId} with ${currentPlayerCount} players.`
       );
     } else {
-      // Update the player count for existing state
       gameStates[sessionId].totalPlayers = currentPlayerCount;
       console.log(
         `Updated state for room ${sessionId} to ${currentPlayerCount} players.`
       );
     }
 
-    // Send current selections to the newly joined player
     socket.emit("selection_update", gameStates[sessionId].selections);
   });
 
@@ -113,17 +104,14 @@ io.on("connection", (socket) => {
       const roomState = gameStates[sessionId];
 
       if (roomState) {
-        // Use the real userID from the client
         roomState.selections[userId] = characterId;
 
-        // Broadcast the updated selections to all players in the room
         io.to(sessionId).emit("selection_update", roomState.selections);
         console.log(
           `Room ${sessionId} selections updated:`,
           roomState.selections
         );
 
-        // Emit specific character selection update for gameplay screen
         io.to(sessionId).emit("character_selection_update", {
           user_id: userId,
           character_id: characterId,
@@ -132,12 +120,10 @@ io.on("connection", (socket) => {
           `Character selection update sent for user ${userId} with character ${characterId}`
         );
 
-        // Check if all players are ready
         const readyPlayerCount = Object.keys(roomState.selections).length;
         if (readyPlayerCount === roomState.totalPlayers) {
           console.log(`ALL players are ready! Starting the game in 500ms...`);
 
-          // ✅ Add small delay to ensure DB writes complete
           setTimeout(() => {
             io.to(sessionId).emit("start_game");
             console.log(`Game started for room ${sessionId}`);
@@ -153,19 +139,16 @@ io.on("connection", (socket) => {
 
     console.log(`[QR Scan] Received path: ${path} for session: ${sessionId}`);
 
-    // FIXED: Determine if this is a combat or treasure encounter
     const pathParts = path.split("/").filter(Boolean);
-    const encounterType = pathParts[0]; // "combat" or "treasure"
-    const encounterSlug = pathParts[1]; // The slug/ID
+    const encounterType = pathParts[0];
+    const encounterSlug = pathParts[1];
 
     console.log(`[QR Scan] Type: ${encounterType}, Slug: ${encounterSlug}`);
 
-    // Handle TREASURE encounters
     if (encounterType === "treasure") {
       console.log(
         `[QR Scan] Treasure room detected, broadcasting to all players...`
       );
-      // FIXED: Broadcast to ALL players in the session
       io.to(sessionId).emit("navigate_to_page", {
         path: `/treasure/${encounterSlug}`,
         scannedBy: socket.id,
@@ -173,7 +156,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Handle COMBAT encounters (original logic)
     if (encounterType === "combat") {
       const enemySlug = encounterSlug;
 
@@ -197,7 +179,6 @@ io.on("connection", (socket) => {
             console.log(
               `Encounter with slug ${enemySlug} is alive. Broadcasting to all players...`
             );
-            // FIXED: Broadcast to ALL players in the session
             io.to(sessionId).emit("navigate_to_page", {
               path: `/combat/${existingEncounter.encounter_id}`,
               scannedBy: socket.id,
@@ -251,7 +232,6 @@ io.on("connection", (socket) => {
           console.log(
             `New encounter created with ID: ${newEncounter.encounter_id}. Broadcasting to all players...`
           );
-          // FIXED: Broadcast to ALL players in the session
           io.to(sessionId).emit("navigate_to_page", {
             path: `/combat/${newEncounter.encounter_id}`,
             scannedBy: socket.id,
@@ -259,12 +239,10 @@ io.on("connection", (socket) => {
         }
       } catch (error) {
         if (error.code !== "PGRST116") {
-          // Ignore "single row not found" errors
           console.error("Error in qr_code_scanned handler:", error);
         }
       }
     } else {
-      // Unknown encounter type
       console.error(`[ERROR] Unknown encounter type: ${encounterType}`);
       socket.emit("show_notification", {
         message: `Unknown QR code type: ${encounterType}`,
@@ -278,7 +256,6 @@ io.on("connection", (socket) => {
       `[Server] Enemy HP update: Encounter ${encounterId} -> ${newHp} HP`
     );
 
-    // Get the session ID for this encounter
     const { data: encounterData } = await supabase
       .from("room_encounters")
       .select("session_id")
@@ -286,13 +263,11 @@ io.on("connection", (socket) => {
       .single();
 
     if (encounterData) {
-      // Broadcast to all clients in this session
       io.to(encounterData.session_id).emit("enemy_hp_update", {
         encounterId,
         newHp,
       });
 
-      // ✅ If enemy is defeated, broadcast victory to all players
       if (newHp <= 0) {
         console.log(
           `🎉 [Server] Enemy defeated! Broadcasting victory to session ${encounterData.session_id}`
@@ -312,7 +287,6 @@ io.on("connection", (socket) => {
         `Updating player ${userId} HP to ${newHp} in session ${sessionId}`
       );
 
-      // Update the player HP
       const { error: updateError } = await supabase
         .from("room_players")
         .update({
@@ -331,7 +305,6 @@ io.on("connection", (socket) => {
 
       console.log(`Successfully updated player ${userId} HP to ${newHp}`);
 
-      // Emit to all players in the session
       io.to(sessionId.toString()).emit("player_hp_update", {
         user_id: userId,
         current_hp: newHp,

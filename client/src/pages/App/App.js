@@ -4,7 +4,7 @@ import {
   Route,
   useLocation,
   Outlet,
-  useNavigate, // Import useNavigate
+  useNavigate,
 } from "react-router-dom";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "../../context/AuthContext";
@@ -79,7 +79,6 @@ const PrivateRoutes = () => {
   return session ? (
     <RoomSessionProvider>
       <SocketProvider>
-        {/* FIX: SocketNavigator must be inside the SocketProvider to get context */}
         <SocketNavigator />
         <Outlet />
       </SocketProvider>
@@ -98,7 +97,6 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        {/* FIX: ToastContainer must be rendered to be visible */}
         <ToastContainer
           position="top-center"
           autoClose={5000}

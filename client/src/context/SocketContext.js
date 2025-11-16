@@ -1,4 +1,3 @@
-// client/src/context/SocketContext.js
 import { createContext, useState, useEffect, useContext } from 'react';
 import io from 'socket.io-client';
 import { useRoomSession } from './RoomSessionContext';
@@ -22,7 +21,6 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('connect', () => {
       console.log(`Socket connected with ID: ${newSocket.id}`);
       
-      // Auto-join room if session exists
       if (sessionDetails?.session_id) {
         newSocket.emit('join_room', sessionDetails.session_id);
       }

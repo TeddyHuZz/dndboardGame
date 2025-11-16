@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"; // Remove useCallback
+import React, { useEffect, useRef } from "react";
 import { useRoomSession } from "../../context/RoomSessionContext";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../supabaseClient";
@@ -11,17 +11,13 @@ const CreateGamePopup = ({ onClose }) => {
   const { profile } = useAuth();
   const navigate = useNavigate();
 
-  // Determine if current user is the host
   const isHost = sessionDetails?.user_id === profile?.user_id;
 
-  // Get the actual host from players list
   const actualHost = players.find((p) => p.user_id === sessionDetails?.user_id);
 
-  // --- FIX: Use a ref to hold a stable reference to the fetch function ---
   const fetchPlayersRef = useRef();
 
   useEffect(() => {
-    // This function will be updated on each render, but the ref will hold the latest version.
     fetchPlayersRef.current = async () => {
       if (!sessionDetails?.session_id) return;
 
@@ -36,9 +32,6 @@ const CreateGamePopup = ({ onClose }) => {
         return;
       }
 
-      // --- FIX: Add a check for missing user data ---
-      // This handles cases where a player might exist in room_players
-      // but their corresponding user record is missing.
       const playersList = data
         .map((p) => {
           if (p.user && p.user.username) {
@@ -47,22 +40,19 @@ const CreateGamePopup = ({ onClose }) => {
               username: p.user.username,
             };
           }
-          // Log a warning for bad data and filter this entry out
           console.warn("Found a player with no matching user record:", p);
           return null;
         })
-        .filter(Boolean); // filter(Boolean) removes any null entries
+        .filter(Boolean);
 
       setPlayers(playersList);
     };
   });
 
-  // --- Initial fetch on mount ---
   useEffect(() => {
     fetchPlayersRef.current();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
-  // --- Subscriptions Effect ---
   useEffect(() => {
     if (!sessionDetails?.session_id) return;
 
@@ -80,7 +70,6 @@ const CreateGamePopup = ({ onClose }) => {
         },
         () => {
           console.log("Player change detected, re-fetching players...");
-          // Call the LATEST version of the fetch function via the ref
           fetchPlayersRef.current();
         }
       )
@@ -117,7 +106,6 @@ const CreateGamePopup = ({ onClose }) => {
       supabase.removeChannel(playerChannel);
       supabase.removeChannel(roomChannel);
     };
-    // This effect only re-runs if the session ID changes.
   }, [sessionDetails?.session_id, navigate, setSessionDetails]);
 
   const handleCopy = () => {
@@ -131,7 +119,6 @@ const CreateGamePopup = ({ onClose }) => {
 
   const handleExitRoom = async () => {
     if (!sessionDetails?.session_id || !profile?.user_id) {
-      // Just close UI if no session
       setSessionDetails(null);
       setPlayers([]);
       onClose();
@@ -139,16 +126,13 @@ const CreateGamePopup = ({ onClose }) => {
     }
 
     try {
-      // Remove current player from room_players table
       await supabase
         .from("room_players")
         .delete()
         .eq("session_id", sessionDetails.session_id)
         .eq("user_id", profile.user_id);
 
-      // Check if current user is the host
       if (isHost) {
-        // Get remaining players
         const { data: remainingPlayers, error: playersError } = await supabase
           .from("room_players")
           .select("user_id, joined_at")
@@ -158,19 +142,17 @@ const CreateGamePopup = ({ onClose }) => {
         if (playersError) throw playersError;
 
         if (remainingPlayers && remainingPlayers.length > 0) {
-          // Transfer host to the first remaining player (earliest joiner)
           const newHostId = remainingPlayers[0].user_id;
 
           await supabase
             .from("room_sessions")
             .update({
-              user_id: newHostId, // Transfer host
+              user_id: newHostId,
             })
             .eq("session_id", sessionDetails.session_id);
 
           console.log(`✅ Host transferred to user: ${newHostId}`);
         } else {
-          // No players left, close the room
           await supabase
             .from("room_sessions")
             .update({ session_status: "Closed" })
@@ -183,13 +165,11 @@ const CreateGamePopup = ({ onClose }) => {
       console.error("Error leaving room:", error);
     }
 
-    // Close UI
     setSessionDetails(null);
     setPlayers([]);
     onClose();
   };
 
-  // The handleStartGame function can now be simplified as the subscription handles navigation.
   const handleStartGame = async () => {
     if (!isHost || !sessionDetails?.session_id) return;
     try {

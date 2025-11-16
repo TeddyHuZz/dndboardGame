@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useRoomSession } from "../../context/RoomSessionContext"; // Import the context
+import { useRoomSession } from "../../context/RoomSessionContext";
 import "./LoadGame.css";
 
 const LoadGame = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { setSessionDetails, setPlayers } = useRoomSession(); // Get setters from context
+  const { setSessionDetails, setPlayers } = useRoomSession();
   const [savedGames, setSavedGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ const LoadGame = () => {
 
   const fetchSavedGames = async () => {
     try {
-      const userId = profile.user_id; // Get from Auth context
+      const userId = profile.user_id;
       const response = await fetch(
         `http://localhost:3001/api/games/load/${userId}`
       );
@@ -50,11 +50,9 @@ const LoadGame = () => {
       const data = await response.json();
 
       if (data.success && data.sessionDetails) {
-        // Set the context, which now automatically saves to sessionStorage
         setSessionDetails(data.sessionDetails);
         setPlayers(data.players);
 
-        // Just navigate. The data will be there when Gameplay loads.
         navigate("/gameplay");
       } else {
         alert("Failed to load game state.");

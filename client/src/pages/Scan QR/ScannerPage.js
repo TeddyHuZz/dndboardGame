@@ -18,13 +18,11 @@ const ScannerPage = () => {
         const url = new URL(data);
         const path = url.pathname;
 
-        // The only job of this function is to emit the event.
         socket.emit("qr_code_scanned", {
           sessionId: sessionDetails.session_id,
           path: path,
         });
 
-        // Navigate away immediately. The SocketNavigator in App.js will handle the response.
         navigate("/gameplay");
       } catch (error) {
         console.error("Scanned data is not a valid URL:", error);
