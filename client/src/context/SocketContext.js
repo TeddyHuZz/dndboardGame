@@ -6,6 +6,7 @@ const SocketContext = createContext(null);
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const { sessionDetails } = useRoomSession();
 
   useEffect(() => {
@@ -14,20 +15,28 @@ export const SocketProvider = ({ children }) => {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       timeout: 10000,
+      transports: ['websocket', 'polling'],
     });
 
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
       console.log(`Socket connected with ID: ${newSocket.id}`);
+      setIsConnected(true);
       
       if (sessionDetails?.session_id) {
         newSocket.emit('join_room', sessionDetails.session_id);
       }
     });
 
+    newSocket.on('disconnect', () => {
+      console.log('Socket disconnected');
+      setIsConnected(false);
+    });
+
     newSocket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
+      setIsConnected(false);
     });
 
     return () => {
@@ -38,7 +47,7 @@ export const SocketProvider = ({ children }) => {
   }, [sessionDetails?.session_id]);
 
   return (
-    <SocketContext.Provider value={{ socket }}>
+    <SocketContext.Provider value={{ socket, isConnected }}>
       {children}
     </SocketContext.Provider>
   );
